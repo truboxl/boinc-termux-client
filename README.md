@@ -5,7 +5,13 @@
 
 ## Installation
 
-In addition of [the official BOINC for Android app](https://play.google.com/store/apps/details?id=edu.berkeley.boinc&hl=en), Android users can install BOINC client from [Termux repo](https://github.com/termux/termux-packages/tree/master/packages/boinc). Simply install Termux from [Google Play](https://play.google.com/store/apps/details?id=com.termux&hl=en) or [F-Droid](https://f-droid.org/en/packages/com.termux/) and install `boinc` using the command:
+In addition of [the official BOINC for Android app](https://play.google.com/store/apps/details?id=edu.berkeley.boinc&hl=en), Android users can install BOINC client from [Termux repo](https://github.com/termux/termux-packages/tree/master/packages/boinc). Simply install Termux from:
+
+[Google Play](https://play.google.com/store/apps/details?id=com.termux&hl=en)
+
+[F-Droid](https://f-droid.org/en/packages/com.termux/)
+
+and install `boinc` using the command:
 
     $ pkg install boinc
 
@@ -46,6 +52,30 @@ Certain projects may not provide 64bit version of their project binaries. They i
 Above is only adding the request to project server. To be able to execute in Termux, you need to `unset LD_PRELOAD` before running the BOINC client. See [termux/termux-app#567](https://github.com/termux/termux-app/issues/567). You can also launch the client with support of running 32bit binaries using:
 
     $ LD_PRELOAD='' boinc
+
+## Auto start BOINC at device boot
+
+This requires Termux:Boot app. You need to install the correct version depending on the installed Termux app due to different key signing. See https://wiki.termux.com/wiki/Termux:Boot. You can install Termux:Boot from:
+
+[Google Play](https://play.google.com/store/apps/details?id=com.termux.boot&hl=en)
+
+[FDroid](https://f-droid.org/en/packages/com.termux.boot/)
+
+After that, add script to `~/.termux/boot` directory (you need to create one), eg: a script name `start-boinc` with the contents below:
+
+```
+#!/data/data/com.termux/files/usr/bin/sh
+termux-wake-lock
+LD_PRELOAD='' boinc --dir ~/boincappdir --daemon
+```
+
+TODO seems like there's `Termux-services` that maybe worth investigating and upstream the effort
+
+## Device name change
+
+[BOINC/boinc#3620](https://github.com/BOINC/boinc/pull/3620) recently introduced device name change feature so that users can change the default name `localhost`. This does mean you need to build BOINC from master branch until the next version release. After that you can change the device name using `cc_config.xml`. See [truboxl/boinc-termux-client#1](https://github.com/truboxl/boinc-termux-client/issues/1) for reference.
+
+TODO add a build script that can be natively built on Termux on device
 
 ## OpenCL platform support
 
@@ -90,7 +120,7 @@ Yes = It works
 \
 No = Just No, don't say another word
 \
-LDP = Prepend `LD_PRELOAD`
+LDP = Unset `LD_PRELOAD`
 \
 Proot = Prepend `proot`
 \
@@ -107,9 +137,8 @@ If you have read this far and plan to do this, you are really on your own. I do 
 ## TODO
 
 * differences between app and Termux
-* daemon mode
 * pkill boinc
 * lack of finer compute controls
-* no thermal controls
+* no thermal controls, fix Android thermal warnings?
 * no idle detection
 * remote monitoring and control
