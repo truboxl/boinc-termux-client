@@ -15,7 +15,7 @@ and install `boinc` using the command:
 
     $ pkg install boinc
 
-Please make sure you know where you want to store the BOINC data as running a simple `boinc` can cause your home directory to be populated with unwanted files. Use `--dir` to point to a prefered location as BOINC data direcroty, example:
+Please make sure you know where you want to store the BOINC data as running a simple `boinc` can cause your home directory to be populated with unwanted files. Use `--dir` to point to a preferred location as BOINC data directory, example:
 
     $ boinc --dir ~/boincappdata
 
@@ -66,7 +66,7 @@ After that, add script to `~/.termux/boot` directory (you need to create one), e
 ```
 #!/data/data/com.termux/files/usr/bin/sh
 termux-wake-lock
-LD_PRELOAD='' boinc --dir ~/boincappdir --daemon
+LD_PRELOAD='' boinc --dir ~/boincappdata --daemon
 ```
 
 TODO seems like there's `Termux-services` that maybe worth investigating and upstream the effort
@@ -75,7 +75,7 @@ TODO seems like there's `Termux-services` that maybe worth investigating and ups
 
 [BOINC/boinc#3620](https://github.com/BOINC/boinc/pull/3620) recently introduced device name change feature so that users can change the default name `localhost`. This does mean you need to build BOINC from master branch until the next version release. After that you can change the device name using `cc_config.xml`. See [truboxl/boinc-termux-client#1](https://github.com/truboxl/boinc-termux-client/issues/1) for reference.
 
-TODO add a build script that can be natively built on Termux on device
+TODO add a build script that can be used to build natively on device in Termux
 
 ## OpenCL platform support
 
