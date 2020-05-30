@@ -93,9 +93,9 @@ Believe it or not, you can run GNU/Linux version of the project binaries on your
 
 ### Don't mix and match Android with GNU/Linux. You can't be that greedy to run them all!
 
-TODO GNU/Linux system calls are INCOMPATIBLE with Android system calls?
+TODO Are GNU/Linux system calls incompatible with Android system calls? Are binaries compiled with GNU libstdc++ not compatible with Android libc++?
 
-TODO binaries compiled with GNU libstdc++ may not be compatible with Android libc++?
+TODO after checking how Termux guys deals with issues that can be workaround using `proot`, eg: [termux/termux-packages#4065](https://github.com/termux/termux-packages/issues/4065), in which their fix is to remove the system calls within the source files, so far I come to the conclusion this isn't something that can be easily fix since it is the science apps that make these calls (not the client) and their sources aren't easily accessible. Maybe let client launch proot instead to reach full compatibility?
 
 ## Platform compatibility table
 
