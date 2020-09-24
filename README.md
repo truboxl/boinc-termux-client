@@ -1,7 +1,16 @@
 # boinc-termux-client
 
-### Document prepared by [truboxl](https://github.com/truboxl)
-### This document intends to provide information on how to use BOINC on Termux.
+### Repo created by [truboxl](https://github.com/truboxl)
+
+This document intends to provide information on how to use BOINC on Termux. Optional technical details may be offered in the "doc" folder.
+
+## Disclaimer on this repo
+
+The information provided here are from my own thoughts and my current level of understanding. It may not be accurate with a bit of my own of bias at the time of writing. I will try to update this doc to be as correct as possible.
+
+## IMPORTANT: BOINC on Google Play situation
+
+Please read [this](doc/BOINC-Google-Play.md).
 
 ## Installation
 
@@ -23,7 +32,17 @@ If you are a long time BOINC user, you can expect to do pretty much everything y
 
 [`boinctui`](https://github.com/termux/termux-packages/tree/master/packages/boinctui) is also available if you want to use that.
 
+## Build from source
+
+This repo also contains a build script so that you can build BOINC on device in Termux environement. Feel free to modify. Standard build tools are needed.
+
+Remember to add patches from <https://github.com/termux/termux-packages/tree/master/packages/boinc> to build BOINC properly.
+
+Optionally, you can use patches included in this repo.
+
 ## Platform name correction
+
+<b>Update: This has been fixed since version 7.16.11! The client will automatically download the correct binaries based on your device architecture.</b>
 
 Because of the way BOINC is built, Termux version of the client will have different platform name `$ARCH-unknown-linux-android` which may not be recognised by the project server. This can be solved by adding `<alt_platform>` to `cc_config.xml` in the data directory. Example on an aarch64 Android device:
 
@@ -41,12 +60,16 @@ On how to use `cc_config.xml`, please refer: https://boinc.berkeley.edu/wiki/Cli
 
 ## 32bit Android platform support
 
+<b>Update: This has been fixed since version 7.16.11! The client will automatically unset the variable before running 32bit executables if your device is 64bit.</b>
+
 Certain projects may not provide 64bit version of their project binaries. They instead chose to provide 32bit version of the binaries. To request downloading 32bit version, add the appropriate `<alt_platform>` in `cc_config.xml`. Example on an aarch64 Android device:
 
 ```
-...
+<cc_config>
+<options>
 <alt_platform>arm-android-linux-gnu</alt_platform>
-...
+</options>
+</cc_config>
 ```
 
 Above is only adding the request to project server. To be able to execute in Termux, you need to `unset LD_PRELOAD` before running the BOINC client. See [termux/termux-app#567](https://github.com/termux/termux-app/issues/567). You can also launch the client with support of running 32bit binaries using:
@@ -55,7 +78,7 @@ Above is only adding the request to project server. To be able to execute in Ter
 
 ## Auto start BOINC at device boot
 
-This requires Termux:Boot app. You need to install the correct version depending on the installed Termux app due to different key signing. See https://wiki.termux.com/wiki/Termux:Boot. You can install Termux:Boot from:
+This requires Termux:Boot app. You need to install the correct version depending on the installed Termux app due to [different key signing](https://wiki.termux.com/wiki/Termux:Boot). You can install Termux:Boot from:
 
 [Google Play](https://play.google.com/store/apps/details?id=com.termux.boot&hl=en)
 
@@ -66,79 +89,79 @@ After that, add script to `~/.termux/boot` directory (you need to create one), e
 ```
 #!/data/data/com.termux/files/usr/bin/sh
 termux-wake-lock
-LD_PRELOAD='' boinc --dir ~/boincappdata --daemon
+boinc --daemon --dir ~/boincappdata
 ```
 
 TODO seems like there's `Termux-services` that maybe worth investigating and upstream the effort
 
 ## Device name change
 
-[BOINC/boinc#3620](https://github.com/BOINC/boinc/pull/3620) recently introduced device name change feature so that users can change the default name `localhost`. This does mean you need to build BOINC from master branch until the next version release. After that you can change the device name using `cc_config.xml`. See [truboxl/boinc-termux-client#1](https://github.com/truboxl/boinc-termux-client/issues/1) for reference.
+<b>Update: This feature has been added since version 7.16.11! You only need to edit `cc_config.xml` to take effect (see below). No more building from source.</b>
 
-TODO add a build script that can be used to build natively on device in Termux
+[BOINC/boinc#3620](https://github.com/BOINC/boinc/pull/3620) introduced device name change feature so that users can change the default name `localhost`. This does mean you need to build BOINC from master branch until the next version release. See [truboxl/boinc-termux-client#1](https://github.com/truboxl/boinc-termux-client/issues/1) for reference.
+
+After that you can change the device name using `cc_config.xml`. Simply add:
+
+```
+<cc_config>
+<options>
+<device_name>your-device-name-here</device_name>
+</options>
+</cc_config>
+```
+
+## Remote monitoring and control
+
+Passing `--allow_remote_gui_rpc` to BOINC allows the client to be connected to GUI Managers from Desktop. Find the IP address of your Android device and the correct port (default is 31416) and you can manage it remotely. If you can't connect, check `cc_config.xml` whether there's `<allow_remote_gui_rpc>` set to 0. Remove it and set to 1 if so.
+
+Above allows all IP addresses to connect your client on your Android device which is unsafe! Try use `remote_hosts.cfg` to whitelist certain range of IP addresses.
+
+See <https://boinc.berkeley.edu/wiki/Controlling_BOINC_remotely>
+
+Example in `cc_config.xml` for all IP addresses access (unsafe):
+
+```
+<cc_config>
+<options>
+<allow_remote_gui_rpc>1</allow_remote_gui_rpc>
+</options>
+</cc_config>
+```
+
+## Suspend computing according to device temperature
+
+An example script that allow Termux BOINC mimic BOINC app suspend computing when device is too hot is provided in the repo.
+
+## Connect to project server
+
+Once you are done with the above and started BOINC client, you can start running tasks by connecting to project server. This needs to be done one time only. See <https://boinc.berkeley.edu/wiki/Boinccmd_tool> on how to connect.
+
+Example, replace "terms" with your own:
+
+```
+cd ~/boincappdata # your data directory
+
+boinccmd --host localhost --passwd $(paste gui_rpc_auth.cfg) --lookup_account "project_URL" "username" "password"
+
+boinccmd --host localhost --passwd $(paste gui_rpc_auth.cfg) --project_attach "project_URL" "account_key"
+```
+
+## Flexible controls
+
+You can create scripts that interface with `boinccmd`, `cc_config.xml`, and `global_prefs_override.xml` to design various type of workloads in contrast to the limited BOINC app. More TODO needed.
 
 ## OpenCL platform support
 
-BOINC client can recognise your Android device's OpenCL capabilities if your device has `libOpenCL.so`. Simply add `LD_LIBRARY_PATH` with the path that can point to `libOpenCL.so`. Before doing this, verify your device if it does have the OpenCL support by running [`clinfo`](https://github.com/Oblomov/clinfo) or [`OpenCL-Z`](https://play.google.com/store/apps/details?id=com.robertwgh.opencl_z_android&hl=en). Example:
-
-    $ LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${ANDROID_ROOT}/vendor/lib64:${ANDROID_ROOT}/vendor/lib64/egl" boinc
-
-### Note: Currently no projects that I am aware of uses OpenCL on Android devices. You don't need to do this.
+Please read [this](doc/BOINC-OpenCL.md).
 
 ## GNU/Linux platform support (EXPERIMENTAL)
 
-Believe it or not, you can run GNU/Linux version of the project binaries on your Android device if the device architecture is the same. This is done through the use of `proot` converting certain system calls. Add the appropriate alternative platform string and run `proot boinc`. However, this is experimental.
+Please read [this](doc/BOINC-Termux-GNU.md).
 
-### Note: You have to GIVE UP running the Android version of binaries if you choose to do this
+## Comparison between BOINC app and Termux BOINC
 
-### Don't mix and match Android with GNU/Linux. You can't be that greedy to run them all!
-
-TODO Are GNU/Linux system calls incompatible with Android system calls? Are binaries compiled with GNU libstdc++ not compatible with Android libc++?
-
-TODO after checking how Termux guys deals with issues that can be workaround using `proot`, eg: [termux/termux-packages#4065](https://github.com/termux/termux-packages/issues/4065), in which their fix is to remove the system calls within the source files, so far I come to the conclusion this isn't something that can be easily fix since it is the science apps that make these calls (not the client) and their sources aren't easily accessible. Maybe let client launch proot instead to reach full compatibility?
-
-## Platform compatibility table
-
-<table>
-<thread>
-<tr>
-<th>Device architecture</th><th colspan=4>Project platform (Android)</th><th colspan=4>Project platform (GNU/Linux)</th>
-</tr>
-</thread>
-<tbody>
-<tr><td></td><td>aarch64</td><td>arm</td><td>x86_64</td><td>x86</td><td>aarch64</td><td>arm</td><td>x86_64</td><td>x86</td></tr>
-<tr><td>aarch64</td><td>Yes</td><td>LDP</td><td>No</td><td>No</td><td>Proot</td><td>LDP + Proot</td><td>No</td><td>No</td></tr>
-<tr><td>arm*</td><td>No</td><td>Yes</td><td>No</td><td>No</td><td>No</td><td>Proot</td><td>No</td><td>No</td></tr>
-<tr><td>x86_64**</td><td>?</td><td>?</td><td>Yes</td><td>LDP</td><td>?</td><td>?</td><td>Proot</td><td>LDP + Proot</td></tr>
-<tr><td>x86**</td><td>?</td><td>?</td><td>No</td><td>Yes</td><td>?</td><td>?</td><td>No</td><td>Proot</td></tr>
-</tbody>
-</table>
-
-Notes:
-\
-Yes = It works
-\
-No = Just No, don't say another word
-\
-LDP = Unset `LD_PRELOAD`
-\
-Proot = Prepend `proot`
-\
-\* = I don't have 32bit ARM devices that are new enough to run Termux. These are based on assumptions. You will be better off using official BOINC app.
-\
-\** = I don't have x86 devices to run Termux. These are based on assumptions.
-\
-? = Some x86 devices have `libhoudini.so`. I am not sure what will happen. But there will be performance issues. Generally assume No.
+Please read [this](doc/BOINC-Termux-comparison.md).
 
 ## Report issues
 
 If you have read this far and plan to do this, you are really on your own. I do not think the BOINC guys endorse this nor the Termux guys able to solve whatever problems nor the project guys want to support such frankenstein platform. You can improve your findings here though. Make an issue or pull request.
-
-## TODO
-
-* differences between app and Termux
-* pkill boinc
-* lack of finer compute controls
-* no thermal controls, fix Android thermal warnings?
-* no idle detection
-* remote monitoring and control
