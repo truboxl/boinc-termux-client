@@ -1,0 +1,12 @@
+#!/data/data/com.termux/files/usr/bin/sh
+BOINC_PATH=$PREFIX/bin
+APPDATA=$HOME/boincappdata
+HOST=localhost
+PORT=31416
+
+cd $APPDATA
+pstree -lT
+echo
+tail stdoutdae.txt
+echo
+$BOINC_PATH/boinccmd --host $HOST:$PORT --passwd $(paste gui_rpc_auth.cfg) --get_tasks 2>&1 | egrep -- '   name|active_task_state|fraction done'
