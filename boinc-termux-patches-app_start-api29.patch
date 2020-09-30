@@ -1,0 +1,51 @@
+diff --git a/client/app_start.cpp b/client/app_start.cpp
+index d5ea25b27f..298505ae27 100644
+--- a/client/app_start.cpp
++++ b/client/app_start.cpp
+@@ -81,6 +81,11 @@ using std::string;
+ 
+ #include "app.h"
+ 
++#ifdef __ANDROID__
++#include <stdlib.h> // getenv(), setenv(), unsetenv()
++char helper_exec[6] = "proot";
++bool use_helper = true;
++#endif
+ 
+ #ifdef _WIN32
+ // Dynamically link to these functions at runtime;
+@@ -1127,6 +1132,21 @@ int ACTIVE_TASK::start(bool test) {
+             //
+             umask(2);
+             retval = execv(switcher_path, argv);
++#ifdef __ANDROID__
++        } else if (use_helper) {
++            // Launch tasks via proot for API29+
++            argv[0] = helper_exec;
++            argv[1] = buf;
++            parse_command_line(cmdline, argv+2);
++            // backup and unset LD_PRELOAD var for proot
++            char *old_env = getenv("LD_PRELOAD");
++            unsetenv("LD_PRELOAD");
++            // helper_exec must be in PATH var
++            retval = execvp(helper_exec, argv);
++            // set LD_PRELOAD var back
++            setenv("LD_PRELOAD", old_env, 1);
++            free(old_env);
++#endif // __ANDROID__
+         } else {
+             argv[0] = buf;
+             parse_command_line(cmdline, argv+1);
+@@ -1148,6 +1168,12 @@ int ACTIVE_TASK::start(bool test) {
+             "[task] ACTIVE_TASK::start(): forked process: pid %d\n", pid
+         );
+     }
++#ifdef __ANDROID__
++    // get debug info from client not from forked task
++    if (use_helper) {
++        msg_printf(NULL, MSG_INFO, "Helper: Running %s via %s\n", exec_name, helper_exec);
++    }
++#endif // __ANDROID__
+ 
+ #endif
+     set_task_state(PROCESS_EXECUTING, "start");

@@ -1,0 +1,171 @@
+diff --git a/_autosetup b/_autosetup
+index 636a4eb56b..ec1b66f0b4 100755
+--- a/_autosetup
++++ b/_autosetup
+@@ -19,7 +19,7 @@ esac
+ check_version()
+ {
+     dir=`pwd`
+-    cd /tmp
++    cd "${TMPDIR:-/tmp}"
+     foundit=
+     ## get current version of $1
+     desired=`echo $2 | awk -F. '{print $1*100+$2}'`
+diff --git a/client/Makefile.am b/client/Makefile.am
+index a85c8c1891..68179a9ccc 100644
+--- a/client/Makefile.am
++++ b/client/Makefile.am
+@@ -25,7 +25,7 @@ if OS_DARWIN
+ endif
+ 
+ bin_PROGRAMS = boinc_client boinccmd
+-if !OS_WIN32
++if OS_DARWIN
+ bin_PROGRAMS += switcher
+ endif
+ 
+diff --git a/client/hostinfo_unix.cpp b/client/hostinfo_unix.cpp
+index 2cf9af3a18..227d86f599 100644
+--- a/client/hostinfo_unix.cpp
++++ b/client/hostinfo_unix.cpp
+@@ -1414,11 +1414,11 @@ int HOST_INFO::get_os_info() {
+ #if HAVE_SYS_UTSNAME_H
+     struct utsname u;
+     uname(&u);
+-#ifdef ANDROID
++#ifdef __ANDROID__
+     safe_strcpy(os_name, "Android");
+ #else
+     safe_strcpy(os_name, u.sysname);
+-#endif //ANDROID
++#endif // __ANDROID__
+ #if defined(__EMX__) // OS2: version is in u.version
+     safe_strcpy(os_version, u.version);
+ #elif defined(__HAIKU__)
+diff --git a/lib/synch.cpp b/lib/synch.cpp
+index 60124de8c1..7a0acbe833 100644
+--- a/lib/synch.cpp
++++ b/lib/synch.cpp
+@@ -18,7 +18,7 @@
+ 
+ // interfaces for accessing sempahores
+ 
+-#ifndef ANDROID
++#ifndef __ANDROID__
+ 
+ #include "config.h"
+ #include <cstdio>
+diff --git a/m4/sah_select_bitness.m4 b/m4/sah_select_bitness.m4
+index 537d83dc5e..04f266783d 100644
+--- a/m4/sah_select_bitness.m4
++++ b/m4/sah_select_bitness.m4
+@@ -1,48 +1,82 @@
+ AC_DEFUN([SAH_DEFAULT_BITNESS],[
+-  if test -z "${COMPILER_MODEL_BITS}"
+-  then
+-    AC_MSG_CHECKING(default bitness of compiler)
+-    echo "int main() { return 0; }" >conftest.c
+-    ${CC} ${CFLAGS} -c conftest.c >&5
++  if test -z "${COMPILER_MODEL_BITS}"; then
++    AC_LANG_PUSH([C])
++    AC_MSG_CHECKING([default bitness of C compiler])
++    echo "int main() { return 0; }" >conftest.$ac_ext
++    AC_REQUIRE_CPP
++    ${CC} ${CFLAGS} ${CPPFLAGS} -fno-lto -c conftest.$ac_ext >&AS_MESSAGE_LOG_FD
+     COMPILER_MODEL_BITS=32
+-    if test -f conftest.${OBJEXT} ; then
+-      if test -n "`objdump --file-headers conftest.${OBJEXT} | grep 'file format' | grep 64`" -o -n "`file conftest.${OBJEXT} | grep -i 64-bit`" 
+-      then
++    if test -f conftest.${OBJEXT}; then
++      if test -n "$(${OBJDUMP} --file-headers conftest.${OBJEXT} | grep 'file format' | grep 64)" -o -n "$(file conftest.${OBJEXT} | grep -i 64-bit)"; then
+         COMPILER_MODEL_BITS=64
+ #      else
+-#        if test -n "`objdump --file-headers conftest.${OBJEXT} | grep 'file format' | grep 16`" 
+-#	then
++#        if test -n "$(${OBJDUMP} --file-headers conftest.${OBJEXT} | grep 'file format' | grep 16)"; then
+ #          COMPILER_MODEL_BITS=16
+ #        fi
+       fi
+     fi
+-    /bin/rm conftest.c
+-    AC_MSG_RESULT($COMPILER_MODEL_BITS)
++    rm conftest.$ac_ext conftest.${OBJEXT}
++    AC_MSG_RESULT([$COMPILER_MODEL_BITS])
++    AC_LANG_POP([C])
++    AC_LANG_PUSH([C++])
++    AC_MSG_CHECKING([default bitness of C++ compiler])
++    echo "int main() { return 0; }" >conftest.$ac_ext
++    AC_REQUIRE_CPP
++    ${CXX} ${CXXFLAGS} ${CPPFLAGS} -fno-lto -c conftest.$ac_ext >&AS_MESSAGE_LOG_FD
++    if test -f conftest.${OBJEXT}; then
++      if test -n "$(${OBJDUMP} --file-headers conftest.${OBJEXT} | grep 'file format' | grep 64)" -o -n "$(file conftest.${OBJEXT} | grep -i 64-bit)"; then
++        if test "${COMPILER_MODEL_BITS}" != "64"; then
++          AC_MSG_ERROR([64 but not same as bitness in C])
++        fi
++      fi
++    fi
++    rm conftest.cpp conftest.${OBJEXT}
++    AC_MSG_RESULT([$COMPILER_MODEL_BITS])
++    AC_LANG_POP([C++])
+   fi
+ ])
+-  
+ 
+ AC_DEFUN([SAH_SELECT_BITNESS],[
+-  AC_LANG_PUSH(C)
+   SAH_DEFAULT_BITNESS
+-  AC_MSG_CHECKING(Selecting $1 bit model)
+-  echo "int main() { return 0; }" >conftest.$ac_ext 
+-  if test "$1" != "${COMPILER_MODEL_BITS}"
+-  then
+-    ${CC} ${CFLAGS} ${CPPFLAGS} -m$1 -c conftest.$ac_ext >&5
+-    if test -f conftest.${OBJEXT} ; then
+-      if test -n "`file conftest.${OBJEXT} | grep -i $1-bit`"
+-      then
++  AC_LANG_PUSH([C])
++  AC_MSG_CHECKING([if C compiler can use -m$1])
++  if test "$1" != "${COMPILER_MODEL_BITS}"; then
++    echo "int main() { return 0; }" >conftest.$ac_ext
++    AC_REQUIRE_CPP
++    ${CC} ${CFLAGS} ${CPPFLAGS} -m$1 -fno-lto -c conftest.$ac_ext >&AS_MESSAGE_LOG_FD
++    if test -f conftest.${OBJEXT}; then
++      if test -n "$(file conftest.${OBJEXT} | grep -i ${1}-bit)"; then
+         CFLAGS="${CFLAGS} -m$1"
+-	AC_MSG_RESULT(-m$1)
+-	COMPILER_MODEL_BITS=$1
++        AC_MSG_RESULT([ok use $1])
++      else
++        AC_MSG_ERROR([failed still $COMPILER_MODEL_BITS])
++      fi
++    fi
++    rm conftest.$ac_ext conftest.${OBJEXT}
++  else
++    AC_MSG_RESULT([ok use $1])
++  fi
++  AC_LANG_POP([C])
++  AC_LANG_PUSH([C++])
++  AC_MSG_CHECKING([if C++ compiler can use -m$1])
++  if test "$1" != "${COMPILER_MODEL_BITS}"; then
++    echo "int main() { return 0; }" >conftest.$ac_ext
++    AC_REQUIRE_CPP
++    ${CXX} ${CXXFLAGS} ${CPPFLAGS} -m$1 -fno-lto -c conftest.$ac_ext >&AS_MESSAGE_LOG_FD
++    if test -f conftest.${OBJEXT}; then
++      if test -n "$(file conftest.${OBJEXT} | grep -i ${1}-bit)"; then
++        CXXFLAGS="${CXXFLAGS} -m$1"
++        AC_MSG_RESULT([ok use $1])
++      else
++        AC_MSG_ERROR([failed still $COMPILER_MODEL_BITS])
+       fi
+-      AC_MSG_RESULT(failed)
+     fi
++    rm conftest.$ac_ext conftest.${OBJEXT}
+   else
+-    AC_MSG_RESULT(ok)
++    AC_MSG_RESULT([ok use $1])
+   fi
+-  AC_LANG_POP(C)
++  AC_LANG_POP([C++])
++  COMPILER_MODEL_BITS=$1
+ ])
+ 
+ AC_DEFUN([SAH_OPTION_BITNESS],[
