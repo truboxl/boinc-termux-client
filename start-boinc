@@ -74,7 +74,7 @@ check_boinc_status() {
 cd "$APPDATA"
 check_boinc_alive 2>/dev/null
 if [ -z "$BOINC_ALIVE" ]; then
-  rm -f time_stats_log stdoutdae.txt stderrdae.txt # cleanup
+  rm -f time_stats_log stdoutdae.txt stderrdae.txt stdoutgpudetect.txt stderrdaegpudetect.txt # cleanup
   #export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${ANDROID_ROOT}/vendor/lib64:${ANDROID_ROOT}/vendor/lib64/egl" # GPU support
   ${BOINC_PATH}/boinc --daemon --dir "$APPDATA" ${BOINC_PORT_ARG} #--run_cpu_benchmarks
 fi
