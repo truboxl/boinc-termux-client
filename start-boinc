@@ -19,7 +19,7 @@ BOINC_PASS="$(paste $APPDATA/gui_rpc_auth.cfg)"
 # BATT >= 90; TEMP <= 40; AC power
 # Comment/uncomment to disable/enable running at
 # different power status
-MAX_BATT=90
+MIN_BATT=90
 MAX_TEMP=40
 PWR_STA1='PLUGGED_AC'
 #PWR_STA2='UNPLUGGED'
@@ -50,7 +50,7 @@ update_battery_status() {
 }
 
 check_safe_region() {
-  if [ "$BATT" -gt "$MAX_BATT" ] && [ "$TEMP" -lt "$MAX_TEMP" ] && (( [ "$PLUG" = "$PWR_STA1" ] || [ "$PLUG" = "$PWR_STA2" ] || [ "$PLUG" = "$PWR_STA3" ] ))
+  if [ "$BATT" -gt "$MIN_BATT" ] && [ "$TEMP" -lt "$MAX_TEMP" ] && (( [ "$PLUG" = "$PWR_STA1" ] || [ "$PLUG" = "$PWR_STA2" ] || [ "$PLUG" = "$PWR_STA3" ] ))
   then
     SAFE_REGION='1'
   else
