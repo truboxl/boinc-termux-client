@@ -1,0 +1,35 @@
+#!/data/data/com.termux/files/usr/bin/sh
+set -e
+
+BOINC_PATH=$PREFIX/bin
+APPDATA=$HOME/boincappdata
+HOST=localhost
+PORT=31416
+
+case "$1" in
+edit)
+    vim "$0" || vi "$0" || nano "$0" || ( echo "Editor not found" && exit 1 )
+    exit
+    ;;
+esac
+
+if [ "$#" -eq 1 ]; then
+    watch -n "$1" "$0"
+    exit "$?"
+fi
+
+cd "$APPDATA"
+if [ -n "$(pidof boinc)" ]; then
+    for BOINC_PID in "$(pidof boinc)"; do
+        echo "BOINC PID: $BOINC_PID"
+        ps -o pid,cmd --no-headers -g "$BOINC_PID" -w | sort
+    done
+else
+    echo 'BOINC client is not running'
+fi
+echo
+echo 'BOINC stdoutdae.txt:'
+tail stdoutdae.txt
+echo
+echo 'BOINC current tasks:'
+$BOINC_PATH/boinccmd --host $HOST:$PORT --passwd $(paste gui_rpc_auth.cfg) --get_tasks 2>&1 | egrep -- '   name|active_task_state|fraction done'
