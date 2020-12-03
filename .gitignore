@@ -1,1 +1,5 @@
+# Source code
 src/boinc*/
+
+# Build artifact
+build/
