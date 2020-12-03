@@ -1,13 +1,14 @@
 #!/bin/bash
 set -e
-if [ ! -d ./boinc*/ ]; then
-  echo "Cloning repo"; git clone https://github.com/boinc/boinc
+export REPO="${PWD}"
+if [ ! -d ./src/boinc*/ ]; then
+  echo "Cloning repo"; git clone https://github.com/boinc/boinc src/boinc
 fi
-echo "Entering repo"; cd ./boinc*/
+echo "Entering repo"; cd ./src/boinc*/
 echo "git fetch"; git fetch
 echo "git reset"; git reset --hard origin/master
 #echo "git clean"; git clean -fxdq
 echo "git apply"
-git apply ../boinc-termux-patches.patch
-git apply ../boinc-termux-patches-app_start-api23.patch
+git apply ${REPO}/boinc-termux-patches.patch
+git apply ${REPO}/boinc-termux-patches-app_start-api23.patch
 echo "Done"
