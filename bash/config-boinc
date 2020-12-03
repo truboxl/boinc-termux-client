@@ -1,0 +1,162 @@
+#!/data/data/com.termux/files/usr/bin/bash
+APPDATA=~/boincappdata
+STARTUP=start-boinc
+BOINC_PATH=$PREFIX/bin
+BOINC_HOST=localhost
+BOINC_PORT=31416
+
+SCRIPT="$(echo $0 | sed -E "s|$(dirname $0)+/||")"
+
+show_help() {
+    echo "$SCRIPT [options]"
+    echo 'Configure BOINC client settings'
+    echo
+    echo "Data directory: $APPDATA"
+    echo "Startup script: $(which $STARTUP)"
+    echo
+    echo 'Options:'
+    echo 'help      Show this help'
+    echo 'edit      Edit the script'
+    echo 'all       Configure all client settings manually'
+    echo 'pause     Pause computation'
+    echo 'resume    Resume computation'
+    echo
+    echo 'Advanced options:'
+    echo 'power <profile>       Adjust computation based on power profile'
+    echo 'set cpu <int>         Set to use percentage of CPU cores'
+    echo 'set maxtemp <int>     Set max temperature for compute'
+    echo 'set minbatt <int>     Set min battery level for compute'
+}
+
+if [ "$#" -eq 0 ]; then
+    show_help
+    exit
+fi
+
+cd "$APPDATA"
+
+boinccmd_read_prefs() {
+    $BOINC_PATH/boinccmd --host localhost:31416 \
+        --passwd "$(paste gui_rpc_auth.cfg)" \
+        --read_global_prefs_override
+}
+
+restart_script() {
+    pkill "$STARTUP"
+    "$STARTUP" &
+}
+
+set_global_prefs() {
+    vi global_prefs_override.xml
+    boinccmd_read_prefs
+}
+
+set_start_boinc() {
+    vi "$(which $STARTUP)"
+    restart_script
+}
+
+uncomment_var() {
+    sed -e "s|^#MIN_BATT=.*|MIN_BATT=|" -i "$(which $STARTUP)"
+    sed -e "s|^#MAX_TEMP=.*|MAX_TEMP=|" -i "$(which $STARTUP)"
+    sed -e "s|^#PWR_STA1=.*|PWR_STA1=|" -i "$(which $STARTUP)"
+    sed -e "s|^#PWR_STA2=.*|PWR_STA2=|" -i "$(which $STARTUP)"
+    sed -e "s|^#PWR_STA3=.*|PWR_STA3=|" -i "$(which $STARTUP)"
+    sed -e "s|^#MIN_TEMP=.*|MIN_TEMP=|" -i "$(which $STARTUP)"
+}
+
+case "$1" in
+help)
+    show_help
+    exit
+    ;;
+all)
+    set_global_prefs
+    set_start_boinc
+    exit
+    ;;
+edit)
+    vim "$0" || vi "$0" || nano "$0" || ( echo 'Editor not found' && exit 1 )
+    exit
+    ;;
+pause|suspend)
+    pkill "$STARTUP"
+    $BOINC_PATH/boinccmd --host "$BOINC_HOST":"$BOINC_PORT" --passwd "$(paste gui_rpc_auth.cfg)" --set_run_mode never
+    echo "Pausing computation"
+    exit
+    ;;
+resume|continue)
+    restart_script
+    echo "Resuming computation"
+    exit
+    ;;
+esac
+
+if [ "$#" -eq 2 ]; then
+case "$1:$2" in
+power:default)
+    uncomment_var
+    sed -e "s|^MIN_BATT=.*|MIN_BATT=90|" -i "$(which $STARTUP)"
+    sed -e "s|^MAX_TEMP=.*|MAX_TEMP=40|" -i "$(which $STARTUP)"
+    sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "$(which $STARTUP)"
+    sed -e "s|^PWR_STA2=.*|#PWR_STA2='UNPLUGGED'|" -i "$(which $STARTUP)"
+    sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(which $STARTUP)"
+    restart_script
+    echo "Set to $@"
+    exit
+    ;;
+power:optimumac)
+    uncomment_var
+    sed -e "s|^MIN_BATT=.*|MIN_BATT=30|" -i "$(which $STARTUP)"
+    sed -e "s|^MAX_TEMP=.*|MAX_TEMP=37|" -i "$(which $STARTUP)"
+    sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "$(which $STARTUP)"
+    sed -e "s|^PWR_STA2=.*|#PWR_STA2='UNPLUGGED'|" -i "$(which $STARTUP)"
+    sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(which $STARTUP)"
+    restart_script
+    echo "Set to $@"
+    exit
+    ;;
+power:optimumall)
+    uncomment_var
+    sed -e "s|^MIN_BATT=.*|MIN_BATT=30|" -i "$(which $STARTUP)"
+    sed -e "s|^MAX_TEMP=.*|MAX_TEMP=37|" -i "$(which $STARTUP)"
+    sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "$(which $STARTUP)"
+    sed -e "s|^PWR_STA2=.*|PWR_STA2='UNPLUGGED'|" -i "$(which $STARTUP)"
+    sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(which $STARTUP)"
+    restart_script
+    echo "Set to $@"
+    exit
+    ;;
+esac
+fi
+
+if [ "$#" -eq 3 ]; then
+if [ "$3" -ge 0 ] && [ "$3" -le 100 ]; then
+case "$1:$2" in
+set:cpu)
+    sed -e "s|<max_ncpus_pct>.*|<max_ncpus_pct>$3.000000</max_ncpus_pct>|" -i global_prefs_override.xml
+    boinccmd_read_prefs
+    echo "Set to use $3% of $(nproc) $2 cores"
+    exit
+    ;;
+set:maxtemp)
+    sed -e "s|^MAX_TEMP=.*|MAX_TEMP=$3|" -i "$(which $STARTUP)"
+    restart_script
+    echo "Set to $3 C maximum temperature"
+    exit
+    ;;
+set:minbatt)
+    sed -e "s|^MIN_BATT=.*|MIN_BATT=$3|" -i "$(which $STARTUP)"
+    restart_script
+    echo "Set to $3 % minimum battery level"
+    exit
+    ;;
+esac
+else
+    echo "ERROR: Integer must be in the range between 0 and 100" >&2
+    exit 1
+fi
+fi
+
+echo "ERROR: Unknown option: $@" >&2
+exit 1
