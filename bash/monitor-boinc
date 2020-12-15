@@ -19,6 +19,10 @@ if [ "$#" -eq 1 ]; then
 fi
 
 cd "$APPDATA"
+
+echo "Temperature: $(termux-battery-status | jq .temperature)"
+echo
+
 if [ -n "$(pidof boinc)" ]; then
     for BOINC_PID in "$(pidof boinc)"; do
         echo "BOINC PID: $BOINC_PID"
