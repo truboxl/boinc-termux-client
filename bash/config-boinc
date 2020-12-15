@@ -1,5 +1,5 @@
 #!/data/data/com.termux/files/usr/bin/bash
-APPDATA=~/boincappdata
+APPDATA=$HOME/boincappdata
 STARTUP=start-boinc
 BOINC_PATH=$PREFIX/bin
 BOINC_HOST=localhost
