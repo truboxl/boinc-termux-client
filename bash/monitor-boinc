@@ -2,6 +2,7 @@
 set -e
 
 BOINC_PATH=$PREFIX/bin
+PATH="$BOINC_PATH:$PATH"
 APPDATA=$HOME/boincappdata
 HOST=localhost
 PORT=31416
@@ -20,7 +21,9 @@ fi
 
 cd "$APPDATA"
 
-echo "Temperature: $(termux-battery-status | jq .temperature)"
+pkill main || true
+pkill termux-api || true
+echo "Temperature: $(termux-battery-status 2>/dev/null | jq .temperature)"
 echo
 
 if [ -n "$(pidof boinc)" ]; then
@@ -36,4 +39,4 @@ echo 'BOINC stdoutdae.txt:'
 tail stdoutdae.txt
 echo
 echo 'BOINC current tasks:'
-$BOINC_PATH/boinccmd --host $HOST:$PORT --passwd $(paste gui_rpc_auth.cfg) --get_tasks 2>&1 | egrep -- '   name|active_task_state|fraction done'
+boinccmd --host $HOST:$PORT --passwd $(paste gui_rpc_auth.cfg) --get_tasks 2>&1 | egrep -- '   name|active_task_state|fraction done'
