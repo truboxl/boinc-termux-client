@@ -2,6 +2,7 @@
 APPDATA=$HOME/boincappdata
 STARTUP=start-boinc
 BOINC_PATH=$PREFIX/bin
+PATH="$BOINC_PATH:$PATH"
 BOINC_HOST=localhost
 BOINC_PORT=31416
 
@@ -36,9 +37,7 @@ fi
 cd "$APPDATA"
 
 boinccmd_read_prefs() {
-    $BOINC_PATH/boinccmd --host localhost:31416 \
-        --passwd "$(paste gui_rpc_auth.cfg)" \
-        --read_global_prefs_override
+    boinccmd --host $BOINC_HOST:$BOINC_PORT --passwd "$(paste gui_rpc_auth.cfg)" --read_global_prefs_override
 }
 
 restart_script() {
@@ -81,7 +80,7 @@ edit)
     ;;
 pause|suspend)
     pkill "$STARTUP"
-    $BOINC_PATH/boinccmd --host "$BOINC_HOST":"$BOINC_PORT" --passwd "$(paste gui_rpc_auth.cfg)" --set_run_mode never
+    boinccmd --host $BOINC_HOST:$BOINC_PORT --passwd "$(paste gui_rpc_auth.cfg)" --set_run_mode never
     echo "Pausing computation"
     exit
     ;;
@@ -105,9 +104,9 @@ power:default)
     echo "Set to $@"
     exit
     ;;
-power:optimumac)
+power:allinac)
     uncomment_var
-    sed -e "s|^MIN_BATT=.*|MIN_BATT=30|" -i "$(which $STARTUP)"
+    sed -e "s|^MIN_BATT=.*|MIN_BATT=0|" -i "$(which $STARTUP)"
     sed -e "s|^MAX_TEMP=.*|MAX_TEMP=37|" -i "$(which $STARTUP)"
     sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "$(which $STARTUP)"
     sed -e "s|^PWR_STA2=.*|#PWR_STA2='UNPLUGGED'|" -i "$(which $STARTUP)"
@@ -118,7 +117,7 @@ power:optimumac)
     ;;
 power:optimumall)
     uncomment_var
-    sed -e "s|^MIN_BATT=.*|MIN_BATT=30|" -i "$(which $STARTUP)"
+    sed -e "s|^MIN_BATT=.*|MIN_BATT=50|" -i "$(which $STARTUP)"
     sed -e "s|^MAX_TEMP=.*|MAX_TEMP=37|" -i "$(which $STARTUP)"
     sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "$(which $STARTUP)"
     sed -e "s|^PWR_STA2=.*|PWR_STA2='UNPLUGGED'|" -i "$(which $STARTUP)"
@@ -134,9 +133,19 @@ if [ "$#" -eq 3 ]; then
 if [ "$3" -ge 0 ] && [ "$3" -le 100 ]; then
 case "$1:$2" in
 set:cpu)
-    sed -e "s|<max_ncpus_pct>.*|<max_ncpus_pct>$3.000000</max_ncpus_pct>|" -i global_prefs_override.xml
-    boinccmd_read_prefs
-    echo "Set to use $3% of $(nproc) $2 cores"
+    cpu="$(nproc)"
+    count=0
+    for i in $(ps -g $(pidof -s boinc) --no-headers -o pid); do
+        count="$(($count+1))"
+    done
+    count="$(($count-1))" # excluding the client
+    wants="$(($cpu*$3/100))"
+    if [ "$wants" -eq 0 ] && [ "$3" -eq 0 ]; then wants=100; fi
+    if [ "$count" != "$wants" ]; then
+        sed -e "s|<max_ncpus_pct>.*|<max_ncpus_pct>$3.000000</max_ncpus_pct>|" -i global_prefs_override.xml
+        boinccmd_read_prefs
+    fi
+    echo "Set to use $3% of $cpu $2 cores"
     exit
     ;;
 set:maxtemp)
