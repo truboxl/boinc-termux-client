@@ -2,7 +2,7 @@
 set -e
 export REPO="${PWD}"
 if [ ! -d ./src/boinc*/ ]; then
-  echo "Cloning repo"; git clone https://github.com/boinc/boinc src/boinc
+    echo "Cloning repo"; git clone https://github.com/boinc/boinc src/boinc
 fi
 echo "Entering repo"; cd ./src/boinc*/
 echo "git fetch"; git fetch
