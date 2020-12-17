@@ -3,7 +3,7 @@ termux-wake-lock
 
 # ===== User variables =====
 # Working directory
-APPDATA="$HOME/boincappdata"
+APPDATA=$HOME/boincappdata
 
 # If you have compiled BOINC yourself
 BOINC_PATH=$PREFIX/bin
@@ -33,61 +33,61 @@ BOINCCMD_ARG="${BOINCCMD_HOST_ARG} ${BOINCCMD_PASS_ARG}"
 
 # ===== Script functions =====
 check_boinc_alive() {
-  if [ -n "$(pidof -s boinc)" ] && [ "$(${BOINC_PATH}/boinccmd ${BOINCCMD_ARG} --get_messages | egrep -- 'Data directory:' | sed -e 's/.*Data directory: //')" = "$APPDATA" ]; then
-    BOINC_ALIVE='1'
-  else
-    BOINC_ALIVE=''
-  fi
+    if [ -n "$(pidof -s boinc)" ] && [ -n "$(boinccmd ${BOINCCMD_ARG} --get_state 2>&1)" ]; then
+        BOINC_ALIVE='1'
+    else
+        BOINC_ALIVE=''
+    fi
 }
 
 update_battery_status() {
-  pkill main # in case termux-battery-status hangs
-  pkill termux-api # same as above
-  STAT="$(termux-battery-status)"
-  BATT="$(echo $STAT | jq .percentage)"
-  PLUG="$(echo $STAT | jq .plugged | sed -e 's/"//g')"
-  TEMP="$(echo $STAT | jq .temperature | sed -e 's/\..*//')"
+    pkill main # in case termux-battery-status hangs
+    pkill termux-api # same as above
+    STAT="$(termux-battery-status 2>/dev/null)"
+    if [ -z "$(echo $STAT)" ]; then update_battery_status; fi
+    BATT="$(echo $STAT | jq .percentage)"
+    PLUG="$(echo $STAT | jq .plugged | sed -e 's/"//g')"
+    TEMP="$(echo $STAT | jq .temperature | sed -e 's/\..*//')"
 }
 
 check_safe_region() {
-  if [ "$BATT" -gt "$MIN_BATT" ] && [ "$TEMP" -lt "$MAX_TEMP" ] && (( [ "$PLUG" = "$PWR_STA1" ] || [ "$PLUG" = "$PWR_STA2" ] || [ "$PLUG" = "$PWR_STA3" ] ))
-  then
-    SAFE_REGION='1'
-  else
-    SAFE_REGION=''
-  fi
+    if [ "$BATT" -gt "$MIN_BATT" ] && [ "$TEMP" -lt "$MAX_TEMP" ] && (( [ "$PLUG" = "$PWR_STA1" ] || [ "$PLUG" = "$PWR_STA2" ] || [ "$PLUG" = "$PWR_STA3" ] )); then
+        SAFE_REGION='1'
+    else
+        SAFE_REGION=''
+    fi
 }
 
 boinc_resume() {
-  ${BOINC_PATH}/boinccmd ${BOINCCMD_ARG} --set_run_mode 'auto'
+    boinccmd ${BOINCCMD_ARG} --set_run_mode 'auto'
 }
 
 boinc_pause() {
-  ${BOINC_PATH}/boinccmd ${BOINCCMD_ARG} --set_run_mode 'never'
+    boinccmd ${BOINCCMD_ARG} --set_run_mode 'never'
 }
 
 check_boinc_status() {
-  BOINC_STATE="$(${BOINC_PATH}/boinccmd ${BOINCCMD_ARG} --get_tasks | egrep -- 'active_task_state' | uniq | sed -e 's/   active.*: //')"
+    BOINC_STATE="$(boinccmd ${BOINCCMD_ARG} --get_tasks | egrep -- 'active_task_state' | uniq | sed -e 's/   active.*: //')"
 }
 
 # ===== Run BOINC =====
 cd "$APPDATA"
 check_boinc_alive 2>/dev/null
 if [ -z "$BOINC_ALIVE" ]; then
-  rm -f time_stats_log stdoutdae.txt stderrdae.txt stdoutgpudetect.txt stderrdaegpudetect.txt # cleanup
-  #export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${ANDROID_ROOT}/vendor/lib64:${ANDROID_ROOT}/vendor/lib64/egl" # GPU support
-  ${BOINC_PATH}/boinc --daemon --dir "$APPDATA" ${BOINC_PORT_ARG} #--run_cpu_benchmarks
+    rm -f time_stats_log stdoutdae.txt stderrdae.txt stdoutgpudetect.txt stderrdaegpudetect.txt # cleanup
+    #export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${ANDROID_ROOT}/vendor/lib64:${ANDROID_ROOT}/vendor/lib64/egl" # GPU support
+    boinc --daemon --dir "$APPDATA" ${BOINC_PORT_ARG} #--run_cpu_benchmarks
 fi
 
 # ===== Main script =====
 sleep 5 # termux-battery-status may hang if too short
 check_boinc_alive
 while [ -n "$BOINC_ALIVE" ]; do
-  check_boinc_alive
-  update_battery_status
-  check_safe_region
-  if [ "$SAFE_REGION" = '1' ]; then boinc_resume; else boinc_pause; fi
-  sleep 30 # set this lower if not responsive
+    check_boinc_alive
+    update_battery_status
+    check_safe_region
+    if [ "$SAFE_REGION" = '1' ]; then boinc_resume; else boinc_pause; fi
+    sleep 30 # set this lower if not responsive
 done
 
 echo 'BOINC stopped running, end of script'
