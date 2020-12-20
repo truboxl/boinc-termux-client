@@ -1,10 +1,13 @@
 #!/data/data/com.termux/files/usr/bin/bash
+
+renice -n 0 -p "$$" >/dev/null
+
 APPDATA=$HOME/boincappdata
-STARTUP=start-boinc
-BOINC_PATH=$PREFIX/bin
-PATH="$BOINC_PATH:$PATH"
 BOINC_HOST=localhost
 BOINC_PORT=31416
+BOINC_PATH=$PREFIX/bin
+PATH="$BOINC_PATH:$PATH"
+STARTUP=start-boinc
 
 SCRIPT="$(echo $0 | sed -E "s|$(dirname $0)+/||")"
 
@@ -41,7 +44,7 @@ boinccmd_read_prefs() {
 }
 
 restart_script() {
-    pkill "$STARTUP"
+    pkill -x "$STARTUP"
     "$STARTUP" &
 }
 
@@ -79,7 +82,7 @@ edit)
     exit
     ;;
 pause|suspend)
-    pkill "$STARTUP"
+    pkill -x "$STARTUP"
     boinccmd --host $BOINC_HOST:$BOINC_PORT --passwd "$(paste gui_rpc_auth.cfg)" --set_run_mode never
     echo "Pausing computation"
     exit
