@@ -1,11 +1,12 @@
 #!/data/data/com.termux/files/usr/bin/sh
-set -e
 
+renice -n 0 -p "$$" >/dev/null
+
+APPDATA=$HOME/boincappdata
+BOINC_HOST=localhost
+BOINC_PORT=31416
 BOINC_PATH=$PREFIX/bin
 PATH="$BOINC_PATH:$PATH"
-APPDATA=$HOME/boincappdata
-HOST=localhost
-PORT=31416
 
 case "$1" in
 edit)
@@ -14,15 +15,10 @@ edit)
     ;;
 esac
 
-if [ "$#" -eq 1 ]; then
-    watch -n "$1" "$0"
-    exit "$?"
-fi
-
 cd "$APPDATA"
 
-pkill main || true
-pkill termux-api || true
+pkill -x main
+pkill -x termux-api
 echo "Temperature: $(termux-battery-status 2>/dev/null | jq .temperature)"
 echo
 
@@ -35,8 +31,10 @@ else
     echo 'BOINC client is not running'
 fi
 echo
+
 echo 'BOINC stdoutdae.txt:'
 tail stdoutdae.txt
 echo
+
 echo 'BOINC current tasks:'
-boinccmd --host $HOST:$PORT --passwd $(paste gui_rpc_auth.cfg) --get_tasks 2>&1 | egrep -- '   name|active_task_state|fraction done'
+boinccmd --host $BOINC_HOST:$BOINC_PORT --passwd $(paste gui_rpc_auth.cfg) --get_tasks 2>&1 | egrep -- '   name|active_task_state|fraction done'
