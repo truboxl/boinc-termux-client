@@ -1,5 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/sh
 termux-wake-lock
+renice -n 0 -p "$$" >/dev/null
 
 # ===== User variables =====
 # Working directory
@@ -11,8 +12,8 @@ PATH="$BOINC_PATH:$PATH"
 
 # Login info for boinccmd
 # Set password using gui_rpc_auth.cfg
-BOINC_PORT=31416
 BOINC_HOST=localhost
+BOINC_PORT=31416
 BOINC_PASS="$(paste $APPDATA/gui_rpc_auth.cfg)"
 
 # BOINC Android app defaults
@@ -43,8 +44,8 @@ check_boinc_alive() {
 }
 
 update_battery_status() {
-    pkill main # in case termux-battery-status hangs
-    pkill termux-api # same as above
+    pkill -x main # in case termux-battery-status hangs
+    pkill -x termux-api # same as above
     STAT="$(termux-battery-status 2>/dev/null)"
     if [ -z "$(echo $STAT)" ]; then update_battery_status; fi
     BATT="$(echo $STAT | jq .percentage)"
