@@ -7,6 +7,7 @@ BOINC_HOST=localhost
 BOINC_PORT=31416
 BOINC_PATH=$PREFIX/bin
 PATH="$BOINC_PATH:$PATH"
+STARTUP=start-boinc
 
 case "$1" in
 edit)
@@ -19,7 +20,8 @@ cd "$APPDATA"
 
 pkill -x main
 pkill -x termux-api
-echo "Temperature: $(termux-battery-status 2>/dev/null | jq .temperature)"
+echo "Current temp: $(termux-battery-status 2>/dev/null | jq .temperature)"
+echo "Maximum temp: $(grep '^MAX_TEMP=' $(which $STARTUP) | sed 's/MAX_TEMP=//')"
 echo
 
 if [ -n "$(pidof boinc)" ]; then
