@@ -5,6 +5,10 @@ renice -n 0 -p "$$" >/dev/null
 APPDATA=$HOME/boincappdata
 BOINC_HOST=localhost
 BOINC_PORT=31416
+BOINC_PORT_ARG="--gui_rpc_port $BOINC_PORT"
+BOINCCMD_HOST_ARG="--host $BOINC_HOST:$BOINC_PORT"
+BOINCCMD_PASS_ARG="--passwd $BOINC_PASS"
+BOINCCMD_ARG="${BOINCCMD_HOST_ARG} ${BOINCCMD_PASS_ARG}"
 BOINC_PATH=$PREFIX/bin
 PATH="$BOINC_PATH:$PATH"
 STARTUP=start-boinc
@@ -39,4 +43,4 @@ tail stdoutdae.txt
 echo
 
 echo 'BOINC current tasks:'
-boinccmd --host $BOINC_HOST:$BOINC_PORT --passwd $(paste gui_rpc_auth.cfg) --get_tasks 2>&1 | egrep -- '   name|active_task_state|fraction done'
+boinccmd ${BOINCCMD_ARG} --get_tasks 2>&1 | egrep -- '   name|active_task_state|fraction done'

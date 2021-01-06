@@ -5,6 +5,10 @@ renice -n 0 -p "$$" >/dev/null
 APPDATA=$HOME/boincappdata
 BOINC_HOST=localhost
 BOINC_PORT=31416
+BOINC_PORT_ARG="--gui_rpc_port $BOINC_PORT"
+BOINCCMD_HOST_ARG="--host $BOINC_HOST:$BOINC_PORT"
+BOINCCMD_PASS_ARG="--passwd $BOINC_PASS"
+BOINCCMD_ARG="${BOINCCMD_HOST_ARG} ${BOINCCMD_PASS_ARG}"
 BOINC_PATH=$PREFIX/bin
 PATH="$BOINC_PATH:$PATH"
 STARTUP=start-boinc
@@ -40,7 +44,7 @@ fi
 cd "$APPDATA"
 
 boinccmd_read_prefs() {
-    boinccmd --host $BOINC_HOST:$BOINC_PORT --passwd "$(paste gui_rpc_auth.cfg)" --read_global_prefs_override
+    boinccmd ${BOINCCMD_ARG} --read_global_prefs_override
 }
 
 restart_script() {
@@ -83,12 +87,13 @@ edit)
     ;;
 pause|suspend)
     pkill -x "$STARTUP"
-    boinccmd --host $BOINC_HOST:$BOINC_PORT --passwd "$(paste gui_rpc_auth.cfg)" --set_run_mode never
+    boinccmd ${BOINCCMD_ARG} --set_run_mode never
     echo "Pausing computation"
     exit
     ;;
 resume|continue)
     restart_script
+    boinccmd ${BOINCCMD_ARG} --set_run_mode auto
     echo "Resuming computation"
     exit
     ;;

@@ -34,7 +34,7 @@ BOINCCMD_ARG="${BOINCCMD_HOST_ARG} ${BOINCCMD_PASS_ARG}"
 
 # ===== Script functions =====
 check_boinc_alive() {
-    if [ -n "$(pidof -s boinc)" ] && [ -n "$(boinccmd ${BOINCCMD_ARG} --get_state 2>&1)" ]; then
+    if [ -n "$(pidof -s boinc)" ] && [ -n "$(boinccmd ${BOINCCMD_ARG} --get_state 2>/dev/null)" ]; then
         BOINC_ALIVE='1'
     else
         BOINC_ALIVE=''
