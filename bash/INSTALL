@@ -1,0 +1,31 @@
+#!/data/data/com.termux/files/usr/bin/sh
+if [ "$#" -eq 0 ]; then
+    echo './INSTALL [--dry-run] DEST'
+    echo
+    echo 'Example:'
+    echo '    ./INSTALL ~/bin'
+    echo
+    echo 'Option:'
+    echo '--dry-run    Check the results before properly install'
+    exit 1
+fi
+
+case "$1" in
+--dry-run)
+    DONT_INSTALL=1
+    ;;
+esac
+
+for i in $(ls); do
+case "$i" in
+README.md) continue ;;
+INSTALL) continue ;;
+esac
+if [ "$DONT_INSTALL" = 1 ]; then
+    echo 'Dry run mode activated'
+    echo "\'$i\' -> \'$2/$i\'"
+else
+    if [ ! -d "$1" ]; then echo "$1 is not a directory" >&2 && exit 1; fi
+    install -v "$i" "$1"
+fi
+done
