@@ -26,13 +26,13 @@ cd "$APPDATA"
 pkill -x main
 pkill -x termux-api
 echo "Current temp: $(termux-battery-status 2>/dev/null | jq .temperature)"
-echo "Maximum temp: $(grep '^MAX_TEMP=' $(which $STARTUP) | sed 's/MAX_TEMP=//')"
+echo "Maximum temp: $(grep '^MAX_TEMP=' $(which $STARTUP) | sed -e 's/MAX_TEMP=//')"
 echo
 
 if [ -n "$(pidof boinc)" ]; then
     for BOINC_PID in "$(pidof boinc)"; do
         echo "BOINC PID: $BOINC_PID"
-        ps -o pid,cmd --no-headers -g "$BOINC_PID" -w | sort
+        ps -o pid,cmd --no-headers -g "$BOINC_PID" -H
     done
 else
     echo 'BOINC client is not running'

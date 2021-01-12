@@ -14,7 +14,7 @@ BOINC_PATH=$PREFIX/bin
 PATH="$BOINC_PATH:$PATH"
 STARTUP=start-boinc
 
-SCRIPT="$(echo $0 | sed -E "s|$(dirname $0)+/||")"
+SCRIPT="$(echo $0 | sed -E -e "s|$(dirname $0)+/||")"
 
 show_help() {
     echo "$SCRIPT [options]"
