@@ -135,6 +135,20 @@ power:optimumall)
     echo "Set to $@"
     exit
     ;;
+power:usboff)
+    sed -e "s|^#PWR_STA3=.*|PWR_STA3=|" -i "$(which $STARTUP)"
+    sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(which $STARTUP)"
+    restart_script
+    echo "Set to pause computing when charging via USB"
+    exit
+    ;;
+power:usbon)
+    sed -e "s|^#PWR_STA3=.*|PWR_STA3=|" -i "$(which $STARTUP)"
+    sed -e "s|^PWR_STA3=.*|PWR_STA3='PLUGGED_USB'|" -i "$(which $STARTUP)"
+    restart_script
+    echo "Set to resume computing when charging via USB"
+    exit
+    ;;
 esac
 fi
 
