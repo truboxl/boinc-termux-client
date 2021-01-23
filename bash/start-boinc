@@ -1,5 +1,6 @@
-#!/data/data/com.termux/files/usr/bin/sh
+#!/data/data/com.termux/files/usr/bin/env bash
 termux-wake-lock
+
 renice -n 0 -p "$$" >/dev/null
 
 # ===== User variables =====
