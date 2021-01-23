@@ -1,18 +1,18 @@
-#!/data/data/com.termux/files/usr/bin/sh
+#!/data/data/com.termux/files/usr/bin/env bash
 
 renice -n 0 -p "$$" >/dev/null
 
-APPDATA=$HOME/boincappdata
-BOINC_HOST=localhost
-BOINC_PORT=31416
-BOINC_PASS="$(paste $APPDATA/gui_rpc_auth.cfg)"
+APPDATA=${APPDATA:-$HOME/boincappdata}
+BOINC_HOST=${BOINC_HOST:-localhost}
+BOINC_PORT=${BOINC_PORT:-31416}
+BOINC_PASS="${BOINC_PASS:-$(paste $APPDATA/gui_rpc_auth.cfg)}"
 BOINC_PORT_ARG="--gui_rpc_port $BOINC_PORT"
 BOINCCMD_HOST_ARG="--host $BOINC_HOST:$BOINC_PORT"
 BOINCCMD_PASS_ARG="--passwd $BOINC_PASS"
 BOINCCMD_ARG="${BOINCCMD_HOST_ARG} ${BOINCCMD_PASS_ARG}"
-BOINC_PATH=$PREFIX/bin
+BOINC_PATH=${BOINC_PATH:-$PREFIX/bin}
 PATH="$BOINC_PATH:$PATH"
-STARTUP=start-boinc
+STARTUP=${STARTUP:-start-boinc}
 
 case "$1" in
 edit)
