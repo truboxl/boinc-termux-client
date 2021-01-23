@@ -57,7 +57,7 @@ update_battery_status() {
 }
 
 check_safe_region() {
-    if [ "$BATT" -gt "$MIN_BATT" ] && [ "$TEMP" -lt "$MAX_TEMP" ] && (( [ "$PLUG" = "$PWR_STA1" ] || [ "$PLUG" = "$PWR_STA2" ] || [ "$PLUG" = "$PWR_STA3" ] )); then
+    if [ "$BATT" -gt "$MIN_BATT" ] && [ "$TEMP" -lt "$MAX_TEMP" ] && ( [ "$PLUG" = "$PWR_STA1" ] || [ "$PLUG" = "$PWR_STA2" ] || [ "$PLUG" = "$PWR_STA3" ] ); then
         SAFE_REGION='1'
     else
         SAFE_REGION=''
