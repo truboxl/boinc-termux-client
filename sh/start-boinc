@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/env bash
+#!/data/data/com.termux/files/usr/bin/sh
 termux-wake-lock
 
 renice -n 0 -p "$$" >/dev/null
@@ -21,13 +21,11 @@ BOINC_PASS="$(paste $APPDATA/gui_rpc_auth.cfg)"
 # BATT >= 90; TEMP <= 40; AC power
 # Comment/uncomment to disable/enable running at
 # different power status
-MIN_BATT=50
-MAX_TEMP=37
-PWR_STA1='PLUGGED_AC' # scale up when plugged in
+MIN_BATT=90
+MAX_TEMP=40
+PWR_STA1='PLUGGED_AC'
 #PWR_STA2='UNPLUGGED'
 #PWR_STA3='PLUGGED_USB'
-MIN_CPU=30
-MAX_CPU=50
 
 # ===== Script variables =====
 BOINC_PORT_ARG="--gui_rpc_port $BOINC_PORT"
@@ -66,40 +64,37 @@ check_safe_region() {
     fi
 }
 
-boinc_scale_up() {
-    if [ "$SCALE" != 1 ]; then
-        config-boinc set cpu "$MAX_CPU" >/dev/null
-        SCALE=1
+boinc_resume() {
+    if [ "$SUSPENDED" != 0 ]; then
+        boinccmd ${BOINCCMD_ARG} --set_run_mode 'auto'
+        SUSPENDED=0
     fi
 }
 
-boinc_scale_down() {
-    if [ "$SCALE" != 0 ]; then
-        config-boinc set cpu "$MIN_CPU" >/dev/null
-        SCALE=0
+boinc_pause() {
+    if [ "$SUSPENDED" != 1 ]; then
+        boinccmd ${BOINCCMD_ARG} --set_run_mode 'never'
+        SUSPENDED=1
     fi
 }
 
-# ===== Check BOINC =====
+# ===== Run BOINC =====
 cd "$APPDATA"
 check_boinc_alive 2>/dev/null
+if [ -z "$BOINC_ALIVE" ]; then
+    rm -f time_stats_log stdoutdae.txt stderrdae.txt stdoutgpudetect.txt stderrdaegpudetect.txt # cleanup
+    #export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${ANDROID_ROOT}/vendor/lib64:${ANDROID_ROOT}/vendor/lib64/egl" # GPU support
+    boinc --daemon --dir "$APPDATA" ${BOINC_PORT_ARG} #--run_cpu_benchmarks
+fi
 
 # ===== Main script =====
-sleep 10 # termux-battery-status may hang if too short
+sleep 5 # termux-battery-status may hang if too short
 check_boinc_alive
 while [ -n "$BOINC_ALIVE" ]; do
     check_boinc_alive
     update_battery_status
     check_safe_region
-    if [ "$SAFE_REGION" = '1' ]; then
-        boinc_scale_up
-    elif [ -n "$(boinccmd --get_tasks | grep SUSPENDED)" ]; then
-        true
-    elif [ -n "$(boinccmd --get_tasks | grep UNINITIALIZED)" ]; then
-        true
-    else
-        boinc_scale_down
-    fi
+    if [ "$SAFE_REGION" = '1' ]; then boinc_resume; else boinc_pause; fi
     sleep 30 # set this lower if not responsive
 done
 

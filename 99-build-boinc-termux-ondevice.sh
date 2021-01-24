@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/env bash
+#!/data/data/com.termux/files/usr/bin/sh
 set -e
 
 export REPO="$PWD"
@@ -69,7 +69,7 @@ du ./*
 
 # If BOINC is installed and running
 # stop BOINC before updating
-if [ "$KILL_BOINC" = 1 ]; then
+if [ "$INSTALL" = 1 ]; then
 while true; do
     echo "Checking whether BOINC is running... $(pidof boinc)"
     if [ -z "$(pidof -s boinc)" ]; then break; fi
@@ -86,7 +86,7 @@ cp -frv ./* "$OUTPUT_FOLDER_BIN/"
 echo "===== BOINC build for Termux done ====="
 
 # If you want autostart BOINC through startup script
-if [ "$KILL_BOINC" = 1 ]; then
+if [ "$INSTALL" = 1 ]; then
 # Place your script name that is executable below
 for i in "start-boinc"; do
     if [ -n "$(which $i)" ]; then

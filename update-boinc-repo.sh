@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/env bash
+#!/data/data/com.termux/files/usr/bin/sh
 set -e
 export REPO="${PWD}"
 if [ ! -d ./src/boinc*/ ]; then
