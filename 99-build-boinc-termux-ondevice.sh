@@ -31,17 +31,27 @@ if [ -e ./Makefile ] && grep -q '^distclean:' ./Makefile; then
     make distclean -s
 fi
 
-# Unfortunately BOINC ./configure is not intelligent in setting FLAGS for Android
+# unfortunately BOINC ./configure is not intelligent in setting FLAGS for
+# Android
+
 # -flto require llvm or gcc variant of ar and ranlib
 # -flto does not support -Os
-# Android NDK applies -fstack-protector-strong -ffixed-x18
+if [ -n "$(which llvm-ar)" ]; then export AR='llvm-ar'; fi
+if [ -n "$(which llvm-ranlib)" ]; then export RANLIB='llvm-ranlib'; fi
+if [ -n "$(which llvm-objdump)" ]; then export OBJDUMP='llvm-objdump'; fi
+if [ -n "$(which llvm-nm)" ]; then export NM='llvm-nm'; fi
+
 # -pipe speeds up compiling, no change in code
-export AR='llvm-ar'
-export RANLIB='llvm-ranlib'
-export OBJDUMP='llvm-objdump'
-export NM='llvm-nm'
-export CFLAGS="${CFLAGS} -O2 -mcpu=native -fstack-protector-strong -ffixed-x18 -pipe"
-export CXXFLAGS="${CXXFLAGS} ${CFLAGS}"
+commonFLAGS="${commonFLAGS} -pipe"
+commonFLAGS="${commonFLAGS} -O2"
+commonFLAGS="${commonFLAGS} -mcpu=native"
+# Android NDK applies -fstack-protector-strong -ffixed-x18
+commonFLAGS="${commonFLAGS} -fstack-protector-strong"
+commonFLAGS="${commonFLAGS} -ffixed-x18"
+# clang-11 fails "undeclared, standard C functions" test
+commonFLAGS="${commonFLAGS} -Werror=implicit-function-declaration"
+export CFLAGS="${CFLAGS} ${commonFLAGS}"
+export CXXFLAGS="${CXXFLAGS} ${commomFLAGS}"
 export LDFLAGS="${LDFLAGS} -landroid-shmem"
 
 ./_autosetup
