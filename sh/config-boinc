@@ -84,7 +84,8 @@ all)
     exit
     ;;
 edit)
-    vim "$0" || vi "$0" || nano "$0" || ( echo 'Editor not found' && exit 1 )
+    # check update-alternatives
+    editor "$0" || ( echo 'Editor not found' && exit 1 )
     exit
     ;;
 pause|suspend)
