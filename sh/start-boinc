@@ -3,48 +3,49 @@ termux-wake-lock
 
 renice -n 0 -p "$$" >/dev/null
 
-# ===== User variables =====
-# Working directory
+# ===== user variables =====
+# working directory
 APPDATA=$HOME/boincappdata
 
-# If you have compiled BOINC yourself
+# if you have compiled BOINC yourself
 BOINC_PATH=$PREFIX/bin
 PATH="$BOINC_PATH:$PATH"
 
-# Login info for boinccmd
-# Set password using gui_rpc_auth.cfg
+# login info for boinccmd
+# set password using gui_rpc_auth.cfg
 BOINC_HOST=localhost
 BOINC_PORT=31416
 BOINC_PASS="$(paste $APPDATA/gui_rpc_auth.cfg)"
 
 # BOINC Android app defaults
 # BATT >= 90; TEMP <= 40; AC power
-# Comment/uncomment to disable/enable running at
-# different power status
+# comment/uncomment to disable/enable running at different power status
 MIN_BATT=90
 MAX_TEMP=40
 PWR_STA1='PLUGGED_AC'
 #PWR_STA2='UNPLUGGED'
 #PWR_STA3='PLUGGED_USB'
 
-# ===== Script variables =====
+# ===== script variables =====
 BOINC_PORT_ARG="--gui_rpc_port $BOINC_PORT"
 BOINCCMD_HOST_ARG="--host $BOINC_HOST:$BOINC_PORT"
 BOINCCMD_PASS_ARG="--passwd $BOINC_PASS"
 BOINCCMD_ARG="${BOINCCMD_HOST_ARG} ${BOINCCMD_PASS_ARG}"
 
-# ===== Script functions =====
+# ===== script functions =====
 check_boinc_alive() {
-    if [ -n "$(pidof -s boinc)" ] && [ -n "$(boinccmd ${BOINCCMD_ARG} --get_state 2>/dev/null)" ]; then
-        BOINC_ALIVE='1'
+    if [ -n "$(pidof -s boinc)" ] && \
+       [ -n "$(boinccmd ${BOINCCMD_ARG} --get_state 2>/dev/null)" ]; then
+        BOINC_ALIVE=1
     else
-        BOINC_ALIVE=''
+        BOINC_ALIVE=0
     fi
 }
 
 update_battery_status() {
-    pkill -x main # in case termux-battery-status hangs
-    pkill -x termux-api # same as above
+    # in case termux-battery-status hangs
+    pkill -x main
+    pkill -x termux-api
     OLDSTAT="$STAT"
     STAT="$(timeout 5 termux-battery-status 2>/dev/null)"
     if [ -z "$(echo $STAT)" ]; then
@@ -57,45 +58,63 @@ update_battery_status() {
 }
 
 check_safe_region() {
-    if [ "$BATT" -gt "$MIN_BATT" ] && [ "$TEMP" -lt "$MAX_TEMP" ] && ( [ "$PLUG" = "$PWR_STA1" ] || [ "$PLUG" = "$PWR_STA2" ] || [ "$PLUG" = "$PWR_STA3" ] ); then
-        SAFE_REGION='1'
+    # TODO sh does not do type checking nor conversion
+    # porting to another language should solve it
+    if [ "$BATT" -gt "$MIN_BATT" ] && \
+       [ "$TEMP" -lt "$MAX_TEMP" ] && \
+       ( [ "$PLUG" = "$PWR_STA1" ] || \
+         [ "$PLUG" = "$PWR_STA2" ] || \
+         [ "$PLUG" = "$PWR_STA3" ] ); then
+        SAFE_REGION=1
     else
-        SAFE_REGION=''
+        SAFE_REGION=0
     fi
 }
 
 boinc_resume() {
     if [ "$SUSPENDED" != 0 ]; then
-        boinccmd ${BOINCCMD_ARG} --set_run_mode 'auto'
+        boinccmd ${BOINCCMD_ARG} --set_run_mode auto
         SUSPENDED=0
     fi
 }
 
 boinc_pause() {
     if [ "$SUSPENDED" != 1 ]; then
-        boinccmd ${BOINCCMD_ARG} --set_run_mode 'never'
+        boinccmd ${BOINCCMD_ARG} --set_run_mode never
         SUSPENDED=1
     fi
 }
 
-# ===== Run BOINC =====
+run_boinc="boinc --daemon --dir ${APPDATA} ${BOINC_PORT_ARG}"
+#run_boinc="${run_boinc} --run_cpu_benchmarks"
+
+# ===== run BOINC =====
 cd "$APPDATA"
 check_boinc_alive 2>/dev/null
-if [ -z "$BOINC_ALIVE" ]; then
-    rm -f time_stats_log stdoutdae.txt stderrdae.txt stdoutgpudetect.txt stderrdaegpudetect.txt # cleanup
-    #export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${ANDROID_ROOT}/vendor/lib64:${ANDROID_ROOT}/vendor/lib64/egl" # GPU support
-    boinc --daemon --dir "$APPDATA" ${BOINC_PORT_ARG} #--run_cpu_benchmarks
+if [ "$BOINC_ALIVE" = 0 ]; then
+    # cleanup
+    rm -f time_stats_log
+    rm -f stdoutdae.txt
+    rm -f stderrdae.txt
+    rm -f stdoutgpudetect.txt
+    rm -f stderrdaegpudetect.txt
+    # GPU support
+    #export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${ANDROID_ROOT}/vendor/lib64"
+    #export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${ANDROID_ROOT}/vendor/lib64/egl"
+    ${run_boinc}
 fi
 
-# ===== Main script =====
-sleep 5 # termux-battery-status may hang if too short
+# ===== main script =====
+# termux-battery-status may hang if too short
+sleep 5
 check_boinc_alive
-while [ -n "$BOINC_ALIVE" ]; do
+while [ "$BOINC_ALIVE" = 1 ]; do
     check_boinc_alive
     update_battery_status
     check_safe_region
-    if [ "$SAFE_REGION" = '1' ]; then boinc_resume; else boinc_pause; fi
-    sleep 30 # set this lower if not responsive
+    if [ "$SAFE_REGION" = 1 ]; then boinc_resume; else boinc_pause; fi
+    # set below lower if not responsive
+    sleep 30
 done
 
 echo 'BOINC stopped running, end of script'
