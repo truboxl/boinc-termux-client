@@ -12,13 +12,13 @@ index 636a4eb56b..ec1b66f0b4 100755
      ## get current version of $1
      desired=`echo $2 | awk -F. '{print $1*100+$2}'`
 diff --git a/client/Makefile.am b/client/Makefile.am
-index a85c8c1891..68179a9ccc 100644
+index 30f38a52d7..20cc9c9c16 100644
 --- a/client/Makefile.am
 +++ b/client/Makefile.am
 @@ -25,7 +25,7 @@ if OS_DARWIN
  endif
- 
- bin_PROGRAMS = boinc_client boinccmd
+
+ bin_PROGRAMS = boinc_client boinccmd boinc
 -if !OS_WIN32
 +if OS_DARWIN
  bin_PROGRAMS += switcher
