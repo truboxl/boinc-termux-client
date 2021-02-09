@@ -45,4 +45,4 @@ tail stdoutdae.txt
 echo
 
 echo 'BOINC current tasks:'
-boinccmd ${BOINCCMD_ARG} --get_tasks 2>&1 | grep -E '   name|active_task_state|fraction done'
+boinccmd ${BOINCCMD_ARG} --get_tasks 2>&1 | grep -E '   name|project URL|active_task_state|fraction done'
