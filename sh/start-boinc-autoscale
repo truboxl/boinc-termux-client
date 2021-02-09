@@ -48,11 +48,15 @@ update_battery_status() {
     pkill -x main # in case termux-battery-status hangs
     pkill -x termux-api # same as above
     OLDSTAT="$STAT"
-    STAT="$(timeout 5 termux-battery-status 2>/dev/null)"
-    if [ -z "$(echo $STAT)" ]; then
-        if [ -z "$(echo $OLDSTAT)" ]; then update_battery_status; fi
-        STAT="$OLDSTAT"
-    fi
+    STAT="$(timeout 5 termux-battery-status 2>&1)"
+    case "$STAT" in
+        "")         STAT="$OLDSTAT" ;;
+        Terminated) STAT="$OLDSTAT" ;;
+    esac
+    case "$STAT" in
+        "")         update_battery_status ;;
+        Terminated) update_battery_status ;;
+    esac
     BATT="$(echo $STAT | jq .percentage)"
     PLUG="$(echo $STAT | jq .plugged | sed -e 's/"//g')"
     TEMP="$(echo $STAT | jq .temperature | sed -e 's/\..*//')"

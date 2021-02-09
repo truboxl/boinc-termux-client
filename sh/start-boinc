@@ -47,19 +47,21 @@ update_battery_status() {
     pkill -x main
     pkill -x termux-api
     OLDSTAT="$STAT"
-    STAT="$(timeout 5 termux-battery-status 2>/dev/null)"
-    if [ -z "$(echo $STAT)" ]; then
-        if [ -z "$(echo $OLDSTAT)" ]; then update_battery_status; fi
-        STAT="$OLDSTAT"
-    fi
+    STAT="$(timeout 5 termux-battery-status 2>&1)"
+    case "$STAT" in
+        "")         STAT="$OLDSTAT" ;;
+        Terminated) STAT="$OLDSTAT" ;;
+    esac
+    case "$STAT" in
+        "")         update_battery_status ;;
+        Terminated) update_battery_status ;;
+    esac
     BATT="$(echo $STAT | jq .percentage)"
     PLUG="$(echo $STAT | jq .plugged | sed -e 's/"//g')"
     TEMP="$(echo $STAT | jq .temperature | sed -e 's/\..*//')"
 }
 
 check_safe_region() {
-    # TODO sh does not do type checking nor conversion
-    # porting to another language should solve it
     if [ "$BATT" -gt "$MIN_BATT" ] && \
        [ "$TEMP" -lt "$MAX_TEMP" ] && \
        ( [ "$PLUG" = "$PWR_STA1" ] || \
