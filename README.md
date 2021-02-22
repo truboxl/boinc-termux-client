@@ -1,6 +1,4 @@
-# boinc-termux-client
-
-### Repo created by [truboxl](https://github.com/truboxl)
+# truboxl/boinc-termux-client
 
 This document intends to provide information on how to use BOINC on Termux. Optional technical details may be offered in the "doc" folder.
 
@@ -8,15 +6,9 @@ This document intends to provide information on how to use BOINC on Termux. Opti
 
 The information provided here are from my own thoughts and my current level of understanding. It may not be accurate with a bit of my own of bias at the time of writing. I will try to update this doc to be as correct as possible.
 
-## IMPORTANT: BOINC on Google Play situation
-
-Please read [this](doc/BOINC-Google-Play.md).
-
 ## Installation
 
-In addition of [the official BOINC for Android app](https://play.google.com/store/apps/details?id=edu.berkeley.boinc&hl=en), Android users can install BOINC client from [Termux repo](https://github.com/termux/termux-packages/tree/master/packages/boinc). Simply install Termux from:
-
-[Google Play](https://play.google.com/store/apps/details?id=com.termux&hl=en)
+Android users can install BOINC client from [Termux repo](https://github.com/termux/termux-packages/tree/master/packages/boinc). Simply install Termux from:
 
 [F-Droid](https://f-droid.org/en/packages/com.termux/)
 
@@ -79,8 +71,6 @@ Above is only adding the request to project server. To be able to execute in Ter
 ## Auto start BOINC at device boot
 
 This requires Termux:Boot app. You need to install the correct version depending on the installed Termux app due to [different key signing](https://wiki.termux.com/wiki/Termux:Boot). You can install Termux:Boot from:
-
-[Google Play](https://play.google.com/store/apps/details?id=com.termux.boot&hl=en)
 
 [FDroid](https://f-droid.org/en/packages/com.termux.boot/)
 
