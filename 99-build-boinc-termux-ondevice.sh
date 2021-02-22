@@ -12,6 +12,11 @@ echo "PREFIX=${PREFIX}"
 if [ ! -d "$PREFIX" ]; then
     echo '$PREFIX is currently invalid. "make install" may fail'
 fi
+
+echo "INSTALL=${INSTALL}"
+if [ "$INSTALL" != 1 ]; then
+    echo '$INSTALL is not set to 1. Not installing...'
+fi
 echo
 
 echo 'Starting BOINC building in 10sec'
