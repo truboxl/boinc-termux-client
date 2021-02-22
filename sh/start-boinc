@@ -3,6 +3,18 @@ termux-wake-lock
 
 renice -n 0 -p "$$" >/dev/null
 
+if [ "$USE_ALL_CORES" != 1 ]; then
+    little_cores=0
+    unset prev
+    cores="$(cat /proc/cpuinfo | grep 'CPU part' | sed -e "s|.*: ||g")"
+    for core in $cores; do
+        if [ -n "$prev" ] && [ "$core" != "$prev" ]; then break; fi
+        little_cores="$(($little_cores+1))"
+        prev="$core"
+    done
+    taskset -apc 0-$(($little_cores-1)) "$$" >/dev/null
+fi
+
 # ===== user variables =====
 # working directory
 APPDATA=$HOME/boincappdata
@@ -89,6 +101,7 @@ boinc_pause() {
 
 run_boinc="boinc --daemon --dir ${APPDATA} ${BOINC_PORT_ARG}"
 #run_boinc="${run_boinc} --run_cpu_benchmarks"
+run_boinc="taskset -ac 0-$(($(nproc --all)-1)) ${run_boinc}"
 
 # ===== run BOINC =====
 cd "$APPDATA"
