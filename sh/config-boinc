@@ -20,22 +20,31 @@ show_help() {
     echo "$SCRIPT [options]"
     echo 'Configure BOINC client settings'
     echo
-    echo "Data directory: $APPDATA"
-    echo "Startup script: $(which $STARTUP)"
-    echo "GUI RPC Port:   $BOINC_PORT"
+    echo "Data directory [APPDATA]:     $APPDATA"
+    echo "Startup script [STARTUP]:     $(which $STARTUP)"
+    echo "GUI RPC Port   [BOINC_PORT]:  $BOINC_PORT"
     echo
     echo 'Options:'
-    echo 'help      Show this help'
-    echo 'edit      Edit the script'
-    echo 'all       Configure all client settings manually'
-    echo 'pause     Pause computation'
-    echo 'resume    Resume computation'
+    echo 'help              Show this help'
+    echo 'edit              Edit the script'
+    echo 'all               Configure all client settings manually'
+    echo 'pause             Pause computation'
+    echo 'resume            Resume computation'
+    echo 'sync              Force sync with projects'
+    echo 'sync acctmgr      Force sync with account manager'
     echo
     echo 'Advanced options:'
     echo 'power <profile>       Adjust computation based on power profile'
     echo 'set cpu <int>         Set to use percentage of CPU cores'
     echo 'set maxtemp <int>     Set max temperature for compute'
     echo 'set minbatt <int>     Set min battery level for compute'
+    echo
+    echo 'Profiles:     MINBATT MAXTEMP AC  BATT    USB'
+    echo 'default       40      90      Y   N       N'
+    echo 'allinac       0       37      Y   N       N'
+    echo 'optimumall    50      37      Y   Y       N'
+    echo 'usboff        -       -       -   -       N'
+    echo 'usbon         -       -       -   -       Y'
 }
 
 if [ "$#" -eq 0 ]; then
@@ -73,6 +82,7 @@ uncomment_var() {
     sed -e "s|^#MIN_TEMP=.*|MIN_TEMP=|" -i "$(which $STARTUP)"
 }
 
+if [ "$#" -eq 1 ]; then
 case "$1" in
 help)
     show_help
@@ -91,16 +101,22 @@ edit)
 pause|suspend)
     pkill -f "$STARTUP\$"
     boinccmd ${BOINCCMD_ARG} --set_run_mode never
-    echo "Pausing computation"
+    echo 'Pausing computation'
     exit
     ;;
 resume|continue)
     restart_script
     boinccmd ${BOINCCMD_ARG} --set_run_mode auto
-    echo "Resuming computation"
+    echo 'Resuming computation'
+    exit
+    ;;
+sync)
+    boinccmd ${BOINCCMD_ARG} --network_available
+    echo 'Started syncing with projects'
     exit
     ;;
 esac
+fi
 
 if [ "$#" -eq 2 ]; then
 case "$1:$2" in
@@ -149,6 +165,10 @@ power:usbon)
     sed -e "s|^PWR_STA3=.*|PWR_STA3='PLUGGED_USB'|" -i "$(which $STARTUP)"
     restart_script
     echo "Set to resume computing when charging via USB"
+    exit
+    ;;
+sync:acctmgr)
+    boinccmd ${BOINCCMD_ARG} --acct_mgr sync
     exit
     ;;
 esac
