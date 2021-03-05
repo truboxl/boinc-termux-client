@@ -25,10 +25,10 @@ index 30f38a52d7..20cc9c9c16 100644
  endif
  
 diff --git a/client/hostinfo_unix.cpp b/client/hostinfo_unix.cpp
-index 2cf9af3a18..227d86f599 100644
+index 7895d0e32b..bb55366280 100644
 --- a/client/hostinfo_unix.cpp
 +++ b/client/hostinfo_unix.cpp
-@@ -1414,11 +1414,11 @@ int HOST_INFO::get_os_info() {
+@@ -1437,11 +1437,11 @@ int HOST_INFO::get_os_info() {
  #if HAVE_SYS_UTSNAME_H
      struct utsname u;
      uname(&u);
@@ -42,16 +42,25 @@ index 2cf9af3a18..227d86f599 100644
  #if defined(__EMX__) // OS2: version is in u.version
      safe_strcpy(os_version, u.version);
  #elif defined(__HAIKU__)
+@@ -1599,7 +1599,7 @@ static const struct dir_tty_dev {
+         return false;
+     }
+ } tty_patterns[] = {
+-#if defined(LINUX_LIKE_SYSTEM) and !defined(ANDROID)
++#if defined(LINUX_LIKE_SYSTEM) && !defined(__ANDROID__)
+     { "/dev", "tty",
+       {"ttyS", "ttyACM"},
+     },
 diff --git a/lib/synch.cpp b/lib/synch.cpp
 index 60124de8c1..7a0acbe833 100644
 --- a/lib/synch.cpp
 +++ b/lib/synch.cpp
 @@ -18,7 +18,7 @@
- 
+
  // interfaces for accessing sempahores
- 
+
 -#ifndef ANDROID
 +#ifndef __ANDROID__
- 
+
  #include "config.h"
  #include <cstdio>
