@@ -41,8 +41,8 @@ show_help() {
     echo
     echo 'Profiles:     MINBATT MAXTEMP AC  BATT    USB'
     echo 'default       40      90      Y   N       N'
-    echo 'allinac       0       38      Y   N       N'
-    echo 'optimumall    50      38      Y   Y       N'
+    echo 'allinac       0       37      Y   N       N'
+    echo 'optimumall    50      37      Y   Y       N'
     echo 'usboff        -       -       -   -       N'
     echo 'usbon         -       -       -   -       Y'
 }
@@ -134,7 +134,7 @@ power:default)
 power:allinac)
     uncomment_var
     sed -e "s|^MIN_BATT=.*|MIN_BATT=0|" -i "$(which $STARTUP)"
-    sed -e "s|^MAX_TEMP=.*|MAX_TEMP=38|" -i "$(which $STARTUP)"
+    sed -e "s|^MAX_TEMP=.*|MAX_TEMP=37|" -i "$(which $STARTUP)"
     sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "$(which $STARTUP)"
     sed -e "s|^PWR_STA2=.*|#PWR_STA2='UNPLUGGED'|" -i "$(which $STARTUP)"
     sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(which $STARTUP)"
@@ -145,7 +145,7 @@ power:allinac)
 power:optimumall)
     uncomment_var
     sed -e "s|^MIN_BATT=.*|MIN_BATT=50|" -i "$(which $STARTUP)"
-    sed -e "s|^MAX_TEMP=.*|MAX_TEMP=38|" -i "$(which $STARTUP)"
+    sed -e "s|^MAX_TEMP=.*|MAX_TEMP=37|" -i "$(which $STARTUP)"
     sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "$(which $STARTUP)"
     sed -e "s|^PWR_STA2=.*|PWR_STA2='UNPLUGGED'|" -i "$(which $STARTUP)"
     sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(which $STARTUP)"
