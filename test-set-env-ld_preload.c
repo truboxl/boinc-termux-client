@@ -1,6 +1,9 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
+
+// no longer required since
+// https://github.com/termux/termux-exec/pull/17
 
 int main(void) {
     printf("%s\n", getenv("LD_PRELOAD"));

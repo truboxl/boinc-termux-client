@@ -10,6 +10,6 @@ echo "git reset"; git reset --hard origin/master
 echo "git clean"; git clean -fxdq
 echo "git apply"
 git apply ${REPO}/boinc-termux-patches.patch
-git apply ${REPO}/boinc-termux-patches-app_start-api23.patch
+#git apply ${REPO}/boinc-termux-patches-app_start-api23.patch
 git apply ${REPO}/boinc-domain-name.patch
 echo "Done"
