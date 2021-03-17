@@ -61,11 +61,11 @@ update_battery_status() {
     OLDSTAT="$STAT"
     STAT="$(timeout 5 termux-battery-status 2>&1)"
     case "$STAT" in
-        "")         STAT="$OLDSTAT" ;;
+        '')         STAT="$OLDSTAT" ;;
         Terminated) STAT="$OLDSTAT" ;;
     esac
     case "$STAT" in
-        "")         update_battery_status ;;
+        '')         update_battery_status ;;
         Terminated) update_battery_status ;;
     esac
     BATT="$(echo $STAT | jq .percentage)"
@@ -99,6 +99,10 @@ boinc_pause() {
     fi
 }
 
+refresh_notification() {
+    "$(dirname $0)/config-boinc" refresh-notify
+}
+
 run_boinc="boinc --daemon --dir ${APPDATA} ${BOINC_PORT_ARG}"
 #run_boinc="${run_boinc} --run_cpu_benchmarks"
 run_boinc="taskset -ac 0-$(($(nproc --all)-1)) ${run_boinc}"
@@ -128,6 +132,7 @@ while [ "$BOINC_ALIVE" = 1 ]; do
     update_battery_status
     check_safe_region
     if [ "$SAFE_REGION" = 1 ]; then boinc_resume; else boinc_pause; fi
+    refresh_notification
     # set below lower if not responsive
     sleep 30
 done

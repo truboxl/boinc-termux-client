@@ -32,6 +32,8 @@ show_help() {
     echo 'resume            Resume computation'
     echo 'sync              Force sync with projects'
     echo 'sync acctmgr      Force sync with account manager'
+    echo 'refresh-notify    Refresh notification (Termux only)'
+    echo 'quit              Tell the client to exit'
     echo
     echo 'Advanced options:'
     echo 'power <profile>       Adjust computation based on power profile'
@@ -82,6 +84,45 @@ uncomment_var() {
     sed -e "s|^#MIN_TEMP=.*|MIN_TEMP=|" -i "$(which $STARTUP)"
 }
 
+# termux-notification
+# soft limit 12 lines
+# more than 12 lines truncated to 10 lines
+# really hard limit until cant see a thing is approx 22 columns
+boinc_stopped_notify() {
+    echo "BOINC client had stopped running" | termux-notification \
+        --alert-once \
+        --group boinc \
+        --id boinc \
+        --title BOINC \
+        --button1 Start \
+        --button1-action "$(dirname $0)/$STARTUP"
+}
+
+boinc_running_notify() {
+    echo "$boinc_status" | termux-notification \
+        --alert-once \
+        --group boinc \
+        --id boinc \
+        --title BOINC \
+        --on-delete "$0 refresh-notify" \
+        --button1 Resume \
+        --button1-action "$0 resume" \
+        --button2 Pause \
+        --button2-action "$0 pause" \
+        --button3 Quit \
+        --button3-action "$0 quit"
+}
+
+refresh_notification() {
+    boinc_status="$(boinccmd ${BOINCCMD_ARG} --get_tasks 2>&1 | \
+                    grep -E '   name|active_task_state|fraction done' | \
+                    sed -e 's|   ||g')"
+    case "$boinc_status" in
+        '')     boinc_stopped_notify ;;
+        *)      boinc_running_notify ;;
+    esac
+}
+
 if [ "$#" -eq 1 ]; then
 case "$1" in
 help)
@@ -95,24 +136,36 @@ all)
     ;;
 edit)
     # check update-alternatives
-    editor "$0" || ( echo 'Editor not found' && exit 1 )
+    editor "$0" || ( echo 'Error occured!' >&2 && exit 1 )
     exit
     ;;
 pause|suspend)
     pkill -f "$STARTUP\$"
     boinccmd ${BOINCCMD_ARG} --set_run_mode never
     echo 'Pausing computation'
+    refresh_notification
     exit
     ;;
 resume|continue)
     restart_script
     boinccmd ${BOINCCMD_ARG} --set_run_mode auto
     echo 'Resuming computation'
+    refresh_notification
     exit
     ;;
 sync)
     boinccmd ${BOINCCMD_ARG} --network_available
     echo 'Started syncing with projects'
+    exit
+    ;;
+refresh-notify)
+    refresh_notification
+    exit
+    ;;
+quit|exit)
+    boinccmd ${BOINCCMD_ARG} --quit
+    echo 'Exiting client'
+    refresh_notification
     exit
     ;;
 esac

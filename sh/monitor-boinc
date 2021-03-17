@@ -17,7 +17,7 @@ STARTUP=${STARTUP:-start-boinc}
 case "$1" in
 edit)
     # check update-alternatives
-    editor "$0" || ( echo "Editor not found" && exit 1 )
+    editor "$0" || ( echo "Error occured!" >&2 && exit 1 )
     exit
     ;;
 esac
@@ -45,4 +45,4 @@ tail stdoutdae.txt
 echo
 
 echo 'BOINC current tasks:'
-boinccmd ${BOINCCMD_ARG} --get_tasks 2>&1 | grep -E '   name|project URL|active_task_state|fraction done'
+boinccmd ${BOINCCMD_ARG} --get_tasks 2>&1 | grep -E '   name|project URL|active_task_state|checkpoint|fraction done'
