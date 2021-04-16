@@ -62,16 +62,16 @@ boinccmd_read_prefs() {
 
 restart_script() {
     pkill -f "$STARTUP\$"
-    "$STARTUP" &
+    "$(which $STARTUP)" &
 }
 
 set_global_prefs() {
-    vi global_prefs_override.xml
+    editor global_prefs_override.xml
     boinccmd_read_prefs
 }
 
 set_start_boinc() {
-    vi "$(which $STARTUP)"
+    editor "$(which $STARTUP)"
     restart_script
 }
 
@@ -99,7 +99,14 @@ boinc_stopped_notify() {
 }
 
 boinc_running_notify() {
-    echo "$boinc_status" | termux-notification \
+    echo "$boinc_status" | \
+        sed -e "s|.*Tasks.*|Tasks:\t|" \
+            -e "s|name: \(.*\)|\1 |g" \
+            -e "s|active_task_state: \(.*\)|\1 |g" \
+            -e "s|fraction done: \(.*\)|\1\t|g" | \
+        tr -d "\n" | \
+        tr "\t" "\n" | \
+        termux-notification \
         --alert-once \
         --group boinc \
         --id boinc \
@@ -115,11 +122,11 @@ boinc_running_notify() {
 
 refresh_notification() {
     boinc_status="$(boinccmd ${BOINCCMD_ARG} --get_tasks 2>&1 | \
-                    grep -E '   name|active_task_state|fraction done' | \
+                    grep -E 'Tasks|   name|active_task_state|fraction done' | \
                     sed -e 's|   ||g')"
     case "$boinc_status" in
-        '')     boinc_stopped_notify ;;
-        *)      boinc_running_notify ;;
+        '') boinc_stopped_notify ;;
+        *)  boinc_running_notify ;;
     esac
 }
 

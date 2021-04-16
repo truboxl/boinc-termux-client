@@ -21,7 +21,13 @@ APPDATA=$HOME/boincappdata
 
 # if you have compiled BOINC yourself
 BOINC_PATH=$PREFIX/bin
-PATH="$BOINC_PATH:$PATH"
+#BOINC_PATH=$HOME/boinc-termux-client/build
+
+# if you put the scripts elsewhere
+SCRIPT_PATH=$HOME/bin
+
+# putting altogether
+PATH="$SCRIPT_PATH:$BOINC_PATH:$PATH"
 
 # login info for boinccmd
 # set password using gui_rpc_auth.cfg
@@ -100,7 +106,7 @@ boinc_pause() {
 }
 
 refresh_notification() {
-    "$(dirname $0)/config-boinc" refresh-notify
+    config-boinc refresh-notify
 }
 
 run_boinc="boinc --daemon --dir ${APPDATA} ${BOINC_PORT_ARG}"
@@ -118,9 +124,14 @@ if [ "$BOINC_ALIVE" = 0 ]; then
     rm -f stdoutgpudetect.txt
     rm -f stderrdaegpudetect.txt
     # GPU support
-    #export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${ANDROID_ROOT}/vendor/lib64"
-    #export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${ANDROID_ROOT}/vendor/lib64/egl"
+    export OLD_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
+    export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/vendor/lib64"
+    export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/vendor/lib64/egl"
+    export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/vendor/lib"
+    export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/vendor/lib/egl"
     ${run_boinc}
+    export LD_LIBRARY_PATH="$OLD_LD_LIBRARY_PATH"
+    unset OLD_LD_LIBRARY_PATH
 fi
 
 # ===== main script =====
