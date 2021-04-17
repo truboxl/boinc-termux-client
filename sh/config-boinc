@@ -5,7 +5,7 @@ renice -n 0 -p "$$" >/dev/null
 APPDATA=${APPDATA:-$HOME/boincappdata}
 BOINC_HOST=${BOINC_HOST:-localhost}
 BOINC_PORT=${BOINC_PORT:-31416}
-BOINC_PASS="${BOINC_PASS:-$(paste $APPDATA/gui_rpc_auth.cfg)}"
+BOINC_PASS="${BOINC_PASS:-$(cat $APPDATA/gui_rpc_auth.cfg)}"
 BOINC_PORT_ARG="--gui_rpc_port $BOINC_PORT"
 BOINCCMD_HOST_ARG="--host $BOINC_HOST:$BOINC_PORT"
 BOINCCMD_PASS_ARG="--passwd $BOINC_PASS"

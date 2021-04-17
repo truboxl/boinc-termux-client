@@ -33,7 +33,7 @@ PATH="$SCRIPT_PATH:$BOINC_PATH:$PATH"
 # set password using gui_rpc_auth.cfg
 BOINC_HOST=localhost
 BOINC_PORT=31416
-BOINC_PASS="$(paste $APPDATA/gui_rpc_auth.cfg)"
+BOINC_PASS="$(cat $APPDATA/gui_rpc_auth.cfg)"
 
 # BOINC Android app defaults
 # BATT >= 90; TEMP <= 40; AC power
