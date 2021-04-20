@@ -50,9 +50,8 @@ if [ -n "$(which llvm-nm)" ]; then export NM='llvm-nm'; fi
 commonFLAGS="${commonFLAGS} -pipe"
 commonFLAGS="${commonFLAGS} -O2"
 commonFLAGS="${commonFLAGS} -mcpu=native"
-# Android NDK applies -fstack-protector-strong -ffixed-x18
+# Android NDK applies -fstack-protector-strong
 commonFLAGS="${commonFLAGS} -fstack-protector-strong"
-commonFLAGS="${commonFLAGS} -ffixed-x18"
 # clang-11 fails "undeclared, standard C functions" test
 commonFLAGS="${commonFLAGS} -Werror=implicit-function-declaration"
 export CFLAGS="${CFLAGS} ${commonFLAGS}"
