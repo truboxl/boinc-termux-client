@@ -238,7 +238,7 @@ if [ "$#" -eq 3 ]; then
 if [ "$3" -ge 0 ] && [ "$3" -le 100 ]; then
 case "$1:$2" in
 set:cpu)
-    cpu="$(nproc)"
+    cpu="$(nproc --all)"
     count=0
     for i in $(ps -g $(pidof -s boinc) --no-headers -o pid); do
         count="$(($count+1))"
