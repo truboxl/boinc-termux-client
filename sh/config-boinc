@@ -246,10 +246,8 @@ set:cpu)
     count="$(($count-1))" # excluding the client
     wants="$(($cpu*$3/100))"
     if [ "$wants" -eq 0 ] && [ "$3" -eq 0 ]; then wants=100; fi
-    if [ "$count" != "$wants" ]; then
-        sed -e "s|<max_ncpus_pct>.*|<max_ncpus_pct>$3.000000</max_ncpus_pct>|" -i global_prefs_override.xml
-        boinccmd_read_prefs
-    fi
+    sed -e "s|<max_ncpus_pct>.*|<max_ncpus_pct>$3.000000</max_ncpus_pct>|" -i global_prefs_override.xml
+    boinccmd_read_prefs
     echo "Set to use $3% of $cpu $2 cores"
     exit
     ;;
