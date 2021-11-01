@@ -27,7 +27,7 @@ cd "$APPDATA"
 pkill -x main
 pkill -x termux-api
 echo "Current temp: $(timeout 5 termux-battery-status 2>/dev/null | jq .temperature)"
-echo "Maximum temp: $(grep '^MAX_TEMP=' $(which $STARTUP) | sed -e 's/MAX_TEMP=//')"
+echo "Maximum temp: $(grep '^MAX_TEMP=' $(command -v $STARTUP) | sed -e 's/MAX_TEMP=//')"
 echo
 
 if [ -n "$(pidof boinc)" ]; then

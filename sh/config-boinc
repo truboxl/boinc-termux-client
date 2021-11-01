@@ -21,7 +21,7 @@ show_help() {
     echo 'Configure BOINC client settings'
     echo
     echo "Data directory [APPDATA]:     $APPDATA"
-    echo "Startup script [STARTUP]:     $(which $STARTUP)"
+    echo "Startup script [STARTUP]:     $(command -v $STARTUP)"
     echo "GUI RPC Port   [BOINC_PORT]:  $BOINC_PORT"
     echo
     echo 'Options:'
@@ -62,7 +62,7 @@ boinccmd_read_prefs() {
 
 restart_script() {
     pkill -f "$STARTUP\$"
-    "$(which $STARTUP)" &
+    "$(command -v $STARTUP)" &
 }
 
 set_global_prefs() {
@@ -71,17 +71,17 @@ set_global_prefs() {
 }
 
 set_start_boinc() {
-    editor "$(which $STARTUP)"
+    editor "$(command -v $STARTUP)"
     restart_script
 }
 
 uncomment_var() {
-    sed -e "s|^#MIN_BATT=.*|MIN_BATT=|" -i "$(which $STARTUP)"
-    sed -e "s|^#MAX_TEMP=.*|MAX_TEMP=|" -i "$(which $STARTUP)"
-    sed -e "s|^#PWR_STA1=.*|PWR_STA1=|" -i "$(which $STARTUP)"
-    sed -e "s|^#PWR_STA2=.*|PWR_STA2=|" -i "$(which $STARTUP)"
-    sed -e "s|^#PWR_STA3=.*|PWR_STA3=|" -i "$(which $STARTUP)"
-    sed -e "s|^#MIN_TEMP=.*|MIN_TEMP=|" -i "$(which $STARTUP)"
+    sed -e "s|^#MIN_BATT=.*|MIN_BATT=|" -i "$(command -v $STARTUP)"
+    sed -e "s|^#MAX_TEMP=.*|MAX_TEMP=|" -i "$(command -v $STARTUP)"
+    sed -e "s|^#PWR_STA1=.*|PWR_STA1=|" -i "$(command -v $STARTUP)"
+    sed -e "s|^#PWR_STA2=.*|PWR_STA2=|" -i "$(command -v $STARTUP)"
+    sed -e "s|^#PWR_STA3=.*|PWR_STA3=|" -i "$(command -v $STARTUP)"
+    sed -e "s|^#MIN_TEMP=.*|MIN_TEMP=|" -i "$(command -v $STARTUP)"
 }
 
 # termux-notification
@@ -182,47 +182,47 @@ if [ "$#" -eq 2 ]; then
 case "$1:$2" in
 power:default)
     uncomment_var
-    sed -e "s|^MIN_BATT=.*|MIN_BATT=90|" -i "$(which $STARTUP)"
-    sed -e "s|^MAX_TEMP=.*|MAX_TEMP=40|" -i "$(which $STARTUP)"
-    sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "$(which $STARTUP)"
-    sed -e "s|^PWR_STA2=.*|#PWR_STA2='UNPLUGGED'|" -i "$(which $STARTUP)"
-    sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(which $STARTUP)"
+    sed -e "s|^MIN_BATT=.*|MIN_BATT=90|" -i "$(command -v $STARTUP)"
+    sed -e "s|^MAX_TEMP=.*|MAX_TEMP=40|" -i "$(command -v $STARTUP)"
+    sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "$(command -v $STARTUP)"
+    sed -e "s|^PWR_STA2=.*|#PWR_STA2='UNPLUGGED'|" -i "$(command -v $STARTUP)"
+    sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(command -v $STARTUP)"
     restart_script
     echo "Set to $@"
     exit
     ;;
 power:allinac)
     uncomment_var
-    sed -e "s|^MIN_BATT=.*|MIN_BATT=0|" -i "$(which $STARTUP)"
-    sed -e "s|^MAX_TEMP=.*|MAX_TEMP=37|" -i "$(which $STARTUP)"
-    sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "$(which $STARTUP)"
-    sed -e "s|^PWR_STA2=.*|#PWR_STA2='UNPLUGGED'|" -i "$(which $STARTUP)"
-    sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(which $STARTUP)"
+    sed -e "s|^MIN_BATT=.*|MIN_BATT=0|" -i "$(command -v $STARTUP)"
+    sed -e "s|^MAX_TEMP=.*|MAX_TEMP=37|" -i "$(command -v $STARTUP)"
+    sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "$(command -v $STARTUP)"
+    sed -e "s|^PWR_STA2=.*|#PWR_STA2='UNPLUGGED'|" -i "$(command -v $STARTUP)"
+    sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(command -v $STARTUP)"
     restart_script
     echo "Set to $@"
     exit
     ;;
 power:optimumall)
     uncomment_var
-    sed -e "s|^MIN_BATT=.*|MIN_BATT=50|" -i "$(which $STARTUP)"
-    sed -e "s|^MAX_TEMP=.*|MAX_TEMP=37|" -i "$(which $STARTUP)"
-    sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "$(which $STARTUP)"
-    sed -e "s|^PWR_STA2=.*|PWR_STA2='UNPLUGGED'|" -i "$(which $STARTUP)"
-    sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(which $STARTUP)"
+    sed -e "s|^MIN_BATT=.*|MIN_BATT=50|" -i "$(command -v $STARTUP)"
+    sed -e "s|^MAX_TEMP=.*|MAX_TEMP=37|" -i "$(command -v $STARTUP)"
+    sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "$(command -v $STARTUP)"
+    sed -e "s|^PWR_STA2=.*|PWR_STA2='UNPLUGGED'|" -i "$(command -v $STARTUP)"
+    sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(command -v $STARTUP)"
     restart_script
     echo "Set to $@"
     exit
     ;;
 power:usboff)
-    sed -e "s|^#PWR_STA3=.*|PWR_STA3=|" -i "$(which $STARTUP)"
-    sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(which $STARTUP)"
+    sed -e "s|^#PWR_STA3=.*|PWR_STA3=|" -i "$(command -v $STARTUP)"
+    sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(command -v $STARTUP)"
     restart_script
     echo "Set to pause computing when charging via USB"
     exit
     ;;
 power:usbon)
-    sed -e "s|^#PWR_STA3=.*|PWR_STA3=|" -i "$(which $STARTUP)"
-    sed -e "s|^PWR_STA3=.*|PWR_STA3='PLUGGED_USB'|" -i "$(which $STARTUP)"
+    sed -e "s|^#PWR_STA3=.*|PWR_STA3=|" -i "$(command -v $STARTUP)"
+    sed -e "s|^PWR_STA3=.*|PWR_STA3='PLUGGED_USB'|" -i "$(command -v $STARTUP)"
     restart_script
     echo "Set to resume computing when charging via USB"
     exit
@@ -252,13 +252,13 @@ set:cpu)
     exit
     ;;
 set:maxtemp)
-    sed -e "s|^MAX_TEMP=.*|MAX_TEMP=$3|" -i "$(which $STARTUP)"
+    sed -e "s|^MAX_TEMP=.*|MAX_TEMP=$3|" -i "$(command -v $STARTUP)"
     restart_script
     echo "Set to $3 C maximum temperature"
     exit
     ;;
 set:minbatt)
-    sed -e "s|^MIN_BATT=.*|MIN_BATT=$3|" -i "$(which $STARTUP)"
+    sed -e "s|^MIN_BATT=.*|MIN_BATT=$3|" -i "$(command -v $STARTUP)"
     restart_script
     echo "Set to $3 % minimum battery level"
     exit

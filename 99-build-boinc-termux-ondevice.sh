@@ -41,14 +41,12 @@ fi
 
 # -flto require llvm or gcc variant of ar and ranlib
 # -flto does not support -Os
-if [ -n "$(which llvm-ar)" ]; then export AR='llvm-ar'; fi
-if [ -n "$(which llvm-ranlib)" ]; then export RANLIB='llvm-ranlib'; fi
-if [ -n "$(which llvm-objdump)" ]; then export OBJDUMP='llvm-objdump'; fi
-if [ -n "$(which llvm-nm)" ]; then export NM='llvm-nm'; fi
+if [ -n "$(command -v llvm-ar)" ]; then export AR='llvm-ar'; fi
+if [ -n "$(command -v llvm-ranlib)" ]; then export RANLIB='llvm-ranlib'; fi
+if [ -n "$(command -v llvm-objdump)" ]; then export OBJDUMP='llvm-objdump'; fi
+if [ -n "$(command -v llvm-nm)" ]; then export NM='llvm-nm'; fi
 
-# -pipe speeds up compiling, no change in code
-commonFLAGS="${commonFLAGS} -pipe"
-commonFLAGS="${commonFLAGS} -O2"
+commonFLAGS="${commonFLAGS} -Os"
 commonFLAGS="${commonFLAGS} -mcpu=native"
 # Android NDK applies -fstack-protector-strong
 commonFLAGS="${commonFLAGS} -fstack-protector-strong"
@@ -103,7 +101,7 @@ echo "===== BOINC build for Termux done ====="
 if [ "$INSTALL" = 1 ]; then
 # Place your script name that is executable below
 for i in "start-boinc"; do
-    if [ -n "$(which $i)" ]; then
+    if [ -n "$(command -v $i)" ]; then
         while [ -n "$(pidof -s $i)" ]; do
             kill "$(pidof -s $i)"
             sleep 5
