@@ -46,5 +46,5 @@ echo
 
 echo 'BOINC current tasks:'
 boinccmd ${BOINCCMD_ARG} --get_tasks 2>&1 | \
-    grep -E "   name|project URL|report deadline|active_task_state|checkpoint|fraction done" | \
+    grep -E "   name|project URL|report deadline|active_task_state|CPU time|fraction done" | \
     sed -e "s|   ||"

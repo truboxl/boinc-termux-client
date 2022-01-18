@@ -111,7 +111,7 @@ refresh_notification() {
 
 run_boinc="boinc --daemon --dir ${APPDATA} ${BOINC_PORT_ARG}"
 #run_boinc="${run_boinc} --run_cpu_benchmarks"
-run_boinc="taskset -ac 0-$(($(nproc --all)-1)) ${run_boinc}"
+#run_boinc="taskset -ac 0-$(($(nproc --all)-1)) ${run_boinc}"
 
 # ===== run BOINC =====
 cd "$APPDATA"
