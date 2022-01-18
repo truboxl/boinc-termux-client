@@ -34,9 +34,7 @@ Optionally, you can use patches included in this repo.
 
 ## Platform name correction
 
-<b>Update: This has been fixed since version 7.16.11! The client will automatically download the correct binaries based on your device architecture.</b>
-
-Because of the way BOINC is built, Termux version of the client will have different platform name `$ARCH-unknown-linux-android` which may not be recognised by the project server. This can be solved by adding `<alt_platform>` to `cc_config.xml` in the data directory. Example on an aarch64 Android device:
+Originally Termux version of the client will have different platform name `$ARCH-unknown-linux-android` which may not be recognised by the project server. This has since been solved to use BOINC approved platform string. If for whatever reason the  issue is not solved, this can be fixed by adding `<alt_platform>` to `cc_config.xml` in the data directory. Example on an aarch64 Android device:
 
 ```
 <cc_config>
@@ -52,21 +50,17 @@ On how to use `cc_config.xml`, please refer: https://boinc.berkeley.edu/wiki/Cli
 
 ## 32bit Android platform support
 
-<b>Update: This has been fixed since version 7.16.11! The client will automatically unset the variable before running 32bit executables if your device is 64bit.</b>
-
-Certain projects may not provide 64bit version of their project binaries. They instead chose to provide 32bit version of the binaries. To request downloading 32bit version, add the appropriate `<alt_platform>` in `cc_config.xml`. Example on an aarch64 Android device:
+64bit Termux version of BOINC client will request from project server to download and run 32bit project tasks by default. Subject to project server availability. To disable requesting 32bit tasks, add this line to your `cc_config.xml`. Example on an aarch64 Android device:
 
 ```
 <cc_config>
 <options>
-<alt_platform>arm-android-linux-gnu</alt_platform>
+<no_alt_platform>1</no_alt_platform>
 </options>
 </cc_config>
 ```
 
-Above is only adding the request to project server. To be able to execute in Termux, you need to `unset LD_PRELOAD` before running the BOINC client. See [termux/termux-app#567](https://github.com/termux/termux-app/issues/567). You can also launch the client with support of running 32bit binaries using:
-
-    $ LD_PRELOAD='' boinc
+Termux version of BOINC client will automatically `unset LD_PRELOAD` before running the 32bit tatsk. See [termux/termux-app#567](https://github.com/termux/termux-app/issues/567).
 
 ## Auto start BOINC at device boot
 
@@ -86,11 +80,11 @@ TODO seems like there's `Termux-services` that maybe worth investigating and ups
 
 ## Device name change
 
-<b>Update: This feature has been added since version 7.16.11! You only need to edit `cc_config.xml` to take effect (see below). No more building from source.</b>
+Termux version of BOINC client will detect your device model name and assign a random ID so that you can better recognise your device when checking the project stats. The name will be in the form of:
 
-[BOINC/boinc#3620](https://github.com/BOINC/boinc/pull/3620) introduced device name change feature so that users can change the default name `localhost`. This does mean you need to build BOINC from master branch until the next version release. See [truboxl/boinc-termux-client#1](https://github.com/truboxl/boinc-termux-client/issues/1) for reference.
+    Manufacturer Model RandomID
 
-After that you can change the device name using `cc_config.xml`. Simply add:
+You can still customise the name by simply change the device name using `cc_config.xml`.
 
 ```
 <cc_config>

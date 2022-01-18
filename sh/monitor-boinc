@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/sh
+#!/bin/sh
 
 renice -n 0 -p "$$" >/dev/null
 
@@ -16,10 +16,10 @@ STARTUP=${STARTUP:-start-boinc}
 
 case "$1" in
 edit)
-    # check update-alternatives
-    editor "$0" || ( echo "Error occured!" >&2 && exit 1 )
-    exit
-    ;;
+	# check update-alternatives
+	editor "$0" || ( echo "Error occured!" >&2 && exit 1 )
+	exit
+	;;
 esac
 
 cd "$APPDATA"
@@ -31,12 +31,12 @@ echo "Maximum temp: $(grep '^MAX_TEMP=' $(command -v $STARTUP) | sed -e 's/MAX_T
 echo
 
 if [ -n "$(pidof boinc)" ]; then
-    for BOINC_PID in "$(pidof boinc)"; do
-        echo "BOINC PID: $BOINC_PID"
-        ps -o pid,cmd --no-headers -g "$BOINC_PID" -H
-    done
+	for BOINC_PID in "$(pidof boinc)"; do
+		echo "BOINC PID: $BOINC_PID"
+		ps -o pid,cmd --no-headers -g "$BOINC_PID" -H
+	done
 else
-    echo 'BOINC client is not running'
+	echo 'BOINC client is not running'
 fi
 echo
 
@@ -46,5 +46,5 @@ echo
 
 echo 'BOINC current tasks:'
 boinccmd ${BOINCCMD_ARG} --get_tasks 2>&1 | \
-    grep -E "   name|project URL|report deadline|active_task_state|CPU time|fraction done" | \
-    sed -e "s|   ||"
+	grep -E "   name|project URL|report deadline|active_task_state|CPU time|fraction done" | \
+	sed -e "s|   ||"

@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/sh
+#!/bin/sh
 termux-wake-lock
 
 renice -n 0 -p "$$" >/dev/null
@@ -37,51 +37,51 @@ BOINCCMD_ARG="${BOINCCMD_HOST_ARG} ${BOINCCMD_PASS_ARG}"
 
 # ===== Script functions =====
 check_boinc_alive() {
-    if [ -n "$(pidof -s boinc)" ] && [ -n "$(boinccmd ${BOINCCMD_ARG} --get_state 2>/dev/null)" ]; then
-        BOINC_ALIVE='1'
-    else
-        BOINC_ALIVE=''
-    fi
+	if [ -n "$(pidof -s boinc)" ] && [ -n "$(boinccmd ${BOINCCMD_ARG} --get_state 2>/dev/null)" ]; then
+		BOINC_ALIVE='1'
+	else
+		BOINC_ALIVE=''
+	fi
 }
 
 update_battery_status() {
-    pkill -x main # in case termux-battery-status hangs
-    pkill -x termux-api # same as above
-    OLDSTAT="$STAT"
-    STAT="$(timeout 5 termux-battery-status 2>&1)"
-    case "$STAT" in
-        "")         STAT="$OLDSTAT" ;;
-        Terminated) STAT="$OLDSTAT" ;;
-    esac
-    case "$STAT" in
-        "")         update_battery_status ;;
-        Terminated) update_battery_status ;;
-    esac
-    BATT="$(echo $STAT | jq .percentage)"
-    PLUG="$(echo $STAT | jq .plugged | sed -e 's/"//g')"
-    TEMP="$(echo $STAT | jq .temperature | sed -e 's/\..*//')"
+	pkill -x main # in case termux-battery-status hangs
+	pkill -x termux-api # same as above
+	OLDSTAT="$STAT"
+	STAT="$(timeout 5 termux-battery-status 2>&1)"
+	case "$STAT" in
+		"")         STAT="$OLDSTAT" ;;
+		Terminated) STAT="$OLDSTAT" ;;
+	esac
+	case "$STAT" in
+		"")         update_battery_status ;;
+		Terminated) update_battery_status ;;
+	esac
+	BATT="$(echo $STAT | jq .percentage)"
+	PLUG="$(echo $STAT | jq .plugged | sed -e 's/"//g')"
+	TEMP="$(echo $STAT | jq .temperature | sed -e 's/\..*//')"
 }
 
 check_safe_region() {
-    if [ "$BATT" -gt "$MIN_BATT" ] && [ "$TEMP" -lt "$MAX_TEMP" ] && ( [ "$PLUG" = "$PWR_STA1" ] || [ "$PLUG" = "$PWR_STA2" ] || [ "$PLUG" = "$PWR_STA3" ] ); then
-        SAFE_REGION='1'
-    else
-        SAFE_REGION=''
-    fi
+	if [ "$BATT" -gt "$MIN_BATT" ] && [ "$TEMP" -lt "$MAX_TEMP" ] && ( [ "$PLUG" = "$PWR_STA1" ] || [ "$PLUG" = "$PWR_STA2" ] || [ "$PLUG" = "$PWR_STA3" ] ); then
+		SAFE_REGION='1'
+	else
+		SAFE_REGION=''
+	fi
 }
 
 boinc_scale_up() {
-    if [ "$SCALE" != 1 ]; then
-        config-boinc set cpu "$MAX_CPU" >/dev/null
-        SCALE=1
-    fi
+	if [ "$SCALE" != 1 ]; then
+		config-boinc set cpu "$MAX_CPU" >/dev/null
+		SCALE=1
+	fi
 }
 
 boinc_scale_down() {
-    if [ "$SCALE" != 0 ]; then
-        config-boinc set cpu "$MIN_CPU" >/dev/null
-        SCALE=0
-    fi
+	if [ "$SCALE" != 0 ]; then
+		config-boinc set cpu "$MIN_CPU" >/dev/null
+		SCALE=0
+	fi
 }
 
 # ===== Check BOINC =====
@@ -92,19 +92,19 @@ check_boinc_alive 2>/dev/null
 sleep 10 # termux-battery-status may hang if too short
 check_boinc_alive
 while [ -n "$BOINC_ALIVE" ]; do
-    check_boinc_alive
-    update_battery_status
-    check_safe_region
-    if [ "$SAFE_REGION" = '1' ]; then
-        boinc_scale_up
-    elif [ -n "$(boinccmd --get_tasks | grep SUSPENDED)" ]; then
-        true
-    elif [ -n "$(boinccmd --get_tasks | grep UNINITIALIZED)" ]; then
-        true
-    else
-        boinc_scale_down
-    fi
-    sleep 30 # set this lower if not responsive
+	check_boinc_alive
+	update_battery_status
+	check_safe_region
+	if [ "$SAFE_REGION" = '1' ]; then
+		boinc_scale_up
+	elif [ -n "$(boinccmd --get_tasks | grep SUSPENDED)" ]; then
+		true
+	elif [ -n "$(boinccmd --get_tasks | grep UNINITIALIZED)" ]; then
+		true
+	else
+		boinc_scale_down
+	fi
+	sleep 30 # set this lower if not responsive
 done
 
 echo 'BOINC stopped running, end of script'

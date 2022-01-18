@@ -1,18 +1,18 @@
-#!/data/data/com.termux/files/usr/bin/sh
+#!/bin/sh
 termux-wake-lock
 
 renice -n 0 -p "$$" >/dev/null
 
 if [ "$USE_ALL_CORES" != 1 ]; then
-    little_cores=0
-    unset prev
-    cores="$(cat /proc/cpuinfo | grep 'CPU part' | sed -e "s|.*: ||g")"
-    for core in $cores; do
-        if [ -n "$prev" ] && [ "$core" != "$prev" ]; then break; fi
-        little_cores="$(($little_cores+1))"
-        prev="$core"
-    done
-    taskset -apc 0-$(($little_cores-1)) "$$" >/dev/null
+	little_cores=0
+	unset prev
+	cores="$(cat /proc/cpuinfo | grep 'CPU part' | sed -e "s|.*: ||g")"
+	for core in $cores; do
+		if [ -n "$prev" ] && [ "$core" != "$prev" ]; then break; fi
+		little_cores="$(($little_cores+1))"
+		prev="$core"
+	done
+	taskset -apc 0-$(($little_cores-1)) "$$" >/dev/null
 fi
 
 # ===== user variables =====
@@ -52,61 +52,61 @@ BOINCCMD_ARG="${BOINCCMD_HOST_ARG} ${BOINCCMD_PASS_ARG}"
 
 # ===== script functions =====
 check_boinc_alive() {
-    if [ -n "$(pidof -s boinc)" ] && \
-       [ -n "$(boinccmd ${BOINCCMD_ARG} --get_state 2>/dev/null)" ]; then
-        BOINC_ALIVE=1
-    else
-        BOINC_ALIVE=0
-    fi
+	if [ -n "$(pidof -s boinc)" ] && \
+	   [ -n "$(boinccmd ${BOINCCMD_ARG} --get_state 2>/dev/null)" ]; then
+		BOINC_ALIVE=1
+	else
+		BOINC_ALIVE=0
+	fi
 }
 
 update_battery_status() {
-    # in case termux-battery-status hangs
-    pkill -x main
-    pkill -x termux-api
-    OLDSTAT="$STAT"
-    STAT="$(timeout 5 termux-battery-status 2>&1)"
-    case "$STAT" in
-        '')         STAT="$OLDSTAT" ;;
-        Terminated) STAT="$OLDSTAT" ;;
-    esac
-    case "$STAT" in
-        '')         update_battery_status ;;
-        Terminated) update_battery_status ;;
-    esac
-    BATT="$(echo $STAT | jq .percentage)"
-    PLUG="$(echo $STAT | jq .plugged | sed -e 's/"//g')"
-    TEMP="$(echo $STAT | jq .temperature | sed -e 's/\..*//')"
+	# in case termux-battery-status hangs
+	pkill -x main
+	pkill -x termux-api
+	OLDSTAT="$STAT"
+	STAT="$(timeout 5 termux-battery-status 2>&1)"
+	case "$STAT" in
+		'')         STAT="$OLDSTAT" ;;
+		Terminated) STAT="$OLDSTAT" ;;
+	esac
+	case "$STAT" in
+		'')         update_battery_status ;;
+		Terminated) update_battery_status ;;
+	esac
+	BATT="$(echo $STAT | jq .percentage)"
+	PLUG="$(echo $STAT | jq .plugged | sed -e 's/"//g')"
+	TEMP="$(echo $STAT | jq .temperature | sed -e 's/\..*//')"
 }
 
 check_safe_region() {
-    if [ "$BATT" -gt "$MIN_BATT" ] && \
-       [ "$TEMP" -lt "$MAX_TEMP" ] && \
-       ( [ "$PLUG" = "$PWR_STA1" ] || \
-         [ "$PLUG" = "$PWR_STA2" ] || \
-         [ "$PLUG" = "$PWR_STA3" ] ); then
-        SAFE_REGION=1
-    else
-        SAFE_REGION=0
-    fi
+	if [ "$BATT" -gt "$MIN_BATT" ] && \
+	   [ "$TEMP" -lt "$MAX_TEMP" ] && \
+	   ( [ "$PLUG" = "$PWR_STA1" ] || \
+		 [ "$PLUG" = "$PWR_STA2" ] || \
+		 [ "$PLUG" = "$PWR_STA3" ] ); then
+		SAFE_REGION=1
+	else
+		SAFE_REGION=0
+	fi
 }
 
 boinc_resume() {
-    if [ "$SUSPENDED" != 0 ]; then
-        boinccmd ${BOINCCMD_ARG} --set_run_mode auto
-        SUSPENDED=0
-    fi
+	if [ "$SUSPENDED" != 0 ]; then
+		boinccmd ${BOINCCMD_ARG} --set_run_mode auto
+		SUSPENDED=0
+	fi
 }
 
 boinc_pause() {
-    if [ "$SUSPENDED" != 1 ]; then
-        boinccmd ${BOINCCMD_ARG} --set_run_mode never
-        SUSPENDED=1
-    fi
+	if [ "$SUSPENDED" != 1 ]; then
+		boinccmd ${BOINCCMD_ARG} --set_run_mode never
+		SUSPENDED=1
+	fi
 }
 
 refresh_notification() {
-    config-boinc refresh-notify
+	config-boinc refresh-notify
 }
 
 run_boinc="boinc --daemon --dir ${APPDATA} ${BOINC_PORT_ARG}"
@@ -117,21 +117,21 @@ run_boinc="boinc --daemon --dir ${APPDATA} ${BOINC_PORT_ARG}"
 cd "$APPDATA"
 check_boinc_alive 2>/dev/null
 if [ "$BOINC_ALIVE" = 0 ]; then
-    # cleanup
-    rm -f time_stats_log
-    rm -f stdoutdae.txt
-    rm -f stderrdae.txt
-    rm -f stdoutgpudetect.txt
-    rm -f stderrdaegpudetect.txt
-    # GPU support
-    #export OLD_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
-    #export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/vendor/lib64"
-    #export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/vendor/lib64/egl"
-    #export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/vendor/lib"
-    #export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/vendor/lib/egl"
-    ${run_boinc}
-    #export LD_LIBRARY_PATH="$OLD_LD_LIBRARY_PATH"
-    #unset OLD_LD_LIBRARY_PATH
+	# cleanup
+	rm -f time_stats_log
+	rm -f stdoutdae.txt
+	rm -f stderrdae.txt
+	rm -f stdoutgpudetect.txt
+	rm -f stderrdaegpudetect.txt
+	# GPU support
+	#export OLD_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
+	#export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/vendor/lib64"
+	#export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/vendor/lib64/egl"
+	#export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/vendor/lib"
+	#export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/vendor/lib/egl"
+	${run_boinc}
+	#export LD_LIBRARY_PATH="$OLD_LD_LIBRARY_PATH"
+	#unset OLD_LD_LIBRARY_PATH
 fi
 
 # ===== main script =====
@@ -139,13 +139,13 @@ fi
 sleep 5
 check_boinc_alive
 while [ "$BOINC_ALIVE" = 1 ]; do
-    check_boinc_alive
-    update_battery_status
-    check_safe_region
-    if [ "$SAFE_REGION" = 1 ]; then boinc_resume; else boinc_pause; fi
-    refresh_notification
-    # set below lower if not responsive
-    sleep 30
+	check_boinc_alive
+	update_battery_status
+	check_safe_region
+	if [ "$SAFE_REGION" = 1 ]; then boinc_resume; else boinc_pause; fi
+	refresh_notification
+	# set below lower if not responsive
+	sleep 30
 done
 
 echo 'BOINC stopped running, end of script'

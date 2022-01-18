@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/sh
+#!/bin/sh
 
 renice -n 0 -p "$$" >/dev/null
 
@@ -17,71 +17,73 @@ STARTUP=${STARTUP:-start-boinc}
 SCRIPT="$(echo $0 | sed -E -e "s|$(dirname $0)+/||")"
 
 show_help() {
-    echo "$SCRIPT [options]"
-    echo 'Configure BOINC client settings'
-    echo
-    echo "Data directory [APPDATA]:     $APPDATA"
-    echo "Startup script [STARTUP]:     $(command -v $STARTUP)"
-    echo "GUI RPC Port   [BOINC_PORT]:  $BOINC_PORT"
-    echo
-    echo 'Options:'
-    echo 'help              Show this help'
-    echo 'edit              Edit the script'
-    echo 'all               Configure all client settings manually'
-    echo 'pause             Pause computation'
-    echo 'resume            Resume computation'
-    echo 'sync              Force sync with projects'
-    echo 'sync acctmgr      Force sync with account manager'
-    echo 'refresh-notify    Refresh notification (Termux only)'
-    echo 'quit              Tell the client to exit'
-    echo
-    echo 'Advanced options:'
-    echo 'power <profile>       Adjust computation based on power profile'
-    echo 'set cpu <int>         Set to use percentage of CPU cores'
-    echo 'set maxtemp <int>     Set max temperature for compute'
-    echo 'set minbatt <int>     Set min battery level for compute'
-    echo
-    echo 'Profiles:     MINBATT MAXTEMP AC  BATT    USB'
-    echo 'default       40      90      Y   N       N'
-    echo 'allinac       0       37      Y   N       N'
-    echo 'optimumall    50      37      Y   Y       N'
-    echo 'usboff        -       -       -   -       N'
-    echo 'usbon         -       -       -   -       Y'
+	cat <<- EOF
+	$SCRIPT [options]
+	Configure BOINC client settings
+
+	Data directory [APPDATA]:     $APPDATA
+	Startup script [STARTUP]:     $(command -v $STARTUP)
+	GUI RPC Port   [BOINC_PORT]:  $BOINC_PORT
+
+	Options:
+	help              Show this help
+	edit              Edit the script
+	all               Configure all client settings manually
+	pause             Pause computation
+	resume            Resume computation
+	sync              Force sync with projects
+	sync acctmgr      Force sync with account manager
+	refresh-notify    Refresh notification (Termux only)
+	quit              Tell the client to exit
+
+	Advanced options:
+	power <profile>       Adjust computation based on power profile
+	set cpu <int>         Set to use percentage of CPU cores
+	set maxtemp <int>     Set max temperature for compute
+	set minbatt <int>     Set min battery level for compute
+
+	Profiles:     MINBATT MAXTEMP AC  BATT    USB
+	default       40      90      Y   N       N
+	allinac       0       37      Y   N       N
+	optimumall    50      37      Y   Y       N
+	usboff        -       -       -   -       N
+	usbon         -       -       -   -       Y
+	EOF
 }
 
 if [ "$#" -eq 0 ]; then
-    show_help
-    exit
+	show_help
+	exit
 fi
 
 cd "$APPDATA"
 
 boinccmd_read_prefs() {
-    boinccmd ${BOINCCMD_ARG} --read_global_prefs_override
+	boinccmd ${BOINCCMD_ARG} --read_global_prefs_override
 }
 
 restart_script() {
-    pkill -f "$STARTUP\$"
-    "$(command -v $STARTUP)" &
+	pkill -f "$STARTUP\$"
+	"$(command -v $STARTUP)" &
 }
 
 set_global_prefs() {
-    editor global_prefs_override.xml
-    boinccmd_read_prefs
+	editor global_prefs_override.xml
+	boinccmd_read_prefs
 }
 
 set_start_boinc() {
-    editor "$(command -v $STARTUP)"
-    restart_script
+	editor "$(command -v $STARTUP)"
+	restart_script
 }
 
 uncomment_var() {
-    sed -e "s|^#MIN_BATT=.*|MIN_BATT=|" -i "$(command -v $STARTUP)"
-    sed -e "s|^#MAX_TEMP=.*|MAX_TEMP=|" -i "$(command -v $STARTUP)"
-    sed -e "s|^#PWR_STA1=.*|PWR_STA1=|" -i "$(command -v $STARTUP)"
-    sed -e "s|^#PWR_STA2=.*|PWR_STA2=|" -i "$(command -v $STARTUP)"
-    sed -e "s|^#PWR_STA3=.*|PWR_STA3=|" -i "$(command -v $STARTUP)"
-    sed -e "s|^#MIN_TEMP=.*|MIN_TEMP=|" -i "$(command -v $STARTUP)"
+	sed -e "s|^#MIN_BATT=.*|MIN_BATT=|" -i "$(command -v $STARTUP)"
+	sed -e "s|^#MAX_TEMP=.*|MAX_TEMP=|" -i "$(command -v $STARTUP)"
+	sed -e "s|^#PWR_STA1=.*|PWR_STA1=|" -i "$(command -v $STARTUP)"
+	sed -e "s|^#PWR_STA2=.*|PWR_STA2=|" -i "$(command -v $STARTUP)"
+	sed -e "s|^#PWR_STA3=.*|PWR_STA3=|" -i "$(command -v $STARTUP)"
+	sed -e "s|^#MIN_TEMP=.*|MIN_TEMP=|" -i "$(command -v $STARTUP)"
 }
 
 # termux-notification
@@ -89,148 +91,148 @@ uncomment_var() {
 # more than 12 lines truncated to 10 lines
 # really hard limit until cant see a thing is approx 22 columns
 boinc_stopped_notify() {
-    echo "BOINC client had stopped running" | termux-notification \
-        --alert-once \
-        --group boinc \
-        --id boinc \
-        --title "BOINC (Stopped)" \
-        --button1 Start \
-        --button1-action "$(dirname $0)/$STARTUP"
+	echo "BOINC client had stopped running" | termux-notification \
+		--alert-once \
+		--group boinc \
+		--id boinc \
+		--title "BOINC (Stopped)" \
+		--button1 Start \
+		--button1-action "$(dirname $0)/$STARTUP"
 }
 
 boinc_running_notify() {
-    echo "$boinc_status" | \
-        sed -e "s|.*Tasks.*|Tasks: (Swipe to refresh)\t|" \
-            -e "s|name: \(.*\)|\1 |g" \
-            -e "s|active_task_state: \(.*\)|\1 |g" \
-            -e "s|fraction done: \(.*\)|\1\t|g" | \
-        tr -d "\n" | \
-        tr "\t" "\n" | \
-        termux-notification \
-        --alert-once \
-        --group boinc \
-        --id boinc \
-        --title "BOINC (Running)" \
-        --on-delete "$0 refresh-notify" \
-        --button1 Resume \
-        --button1-action "$0 resume" \
-        --button2 Pause \
-        --button2-action "$0 pause" \
-        --button3 Quit \
-        --button3-action "$0 quit"
+	echo "$boinc_status" | \
+		sed -e "s|.*Tasks.*|Tasks: (Swipe to refresh)\t|" \
+			-e "s|name: \(.*\)|\1 |g" \
+			-e "s|active_task_state: \(.*\)|\1 |g" \
+			-e "s|fraction done: \(.*\)|\1\t|g" | \
+		tr -d "\n" | \
+		tr "\t" "\n" | \
+		termux-notification \
+		--alert-once \
+		--group boinc \
+		--id boinc \
+		--title "BOINC (Running)" \
+		--on-delete "$0 refresh-notify" \
+		--button1 Resume \
+		--button1-action "$0 resume" \
+		--button2 Pause \
+		--button2-action "$0 pause" \
+		--button3 Quit \
+		--button3-action "$0 quit"
 }
 
 refresh_notification() {
-    boinc_status="$(boinccmd ${BOINCCMD_ARG} --get_tasks 2>&1 | \
-                    grep -E 'Tasks|   name|active_task_state|fraction done' | \
-                    sed -e 's|   ||g')"
-    case "$boinc_status" in
-        '') boinc_stopped_notify ;;
-        *)  boinc_running_notify ;;
-    esac
+	boinc_status="$(boinccmd ${BOINCCMD_ARG} --get_tasks 2>&1 | \
+					grep -E 'Tasks|   name|active_task_state|fraction done' | \
+					sed -e 's|   ||g')"
+	case "$boinc_status" in
+		'') boinc_stopped_notify ;;
+		*)  boinc_running_notify ;;
+	esac
 }
 
 if [ "$#" -eq 1 ]; then
 case "$1" in
 help)
-    show_help
-    exit
-    ;;
+	show_help
+	exit
+	;;
 all)
-    set_global_prefs
-    set_start_boinc
-    exit
-    ;;
+	set_global_prefs
+	set_start_boinc
+	exit
+	;;
 edit)
-    # check update-alternatives
-    editor "$0" || ( echo 'Error occured!' >&2 && exit 1 )
-    exit
-    ;;
+	# check update-alternatives
+	editor "$0" || ( echo 'Error occured!' >&2 && exit 1 )
+	exit
+	;;
 pause|suspend)
-    pkill -f "$STARTUP\$"
-    boinccmd ${BOINCCMD_ARG} --set_run_mode never
-    echo 'Pausing computation'
-    refresh_notification
-    exit
-    ;;
+	pkill -f "$STARTUP\$"
+	boinccmd ${BOINCCMD_ARG} --set_run_mode never
+	echo 'Pausing computation'
+	refresh_notification
+	exit
+	;;
 resume|continue)
-    restart_script
-    boinccmd ${BOINCCMD_ARG} --set_run_mode auto
-    echo 'Resuming computation'
-    refresh_notification
-    exit
-    ;;
+	restart_script
+	boinccmd ${BOINCCMD_ARG} --set_run_mode auto
+	echo 'Resuming computation'
+	refresh_notification
+	exit
+	;;
 sync)
-    boinccmd ${BOINCCMD_ARG} --network_available
-    echo 'Started syncing with projects'
-    exit
-    ;;
+	boinccmd ${BOINCCMD_ARG} --network_available
+	echo 'Started syncing with projects'
+	exit
+	;;
 refresh-notify)
-    refresh_notification
-    exit
-    ;;
+	refresh_notification
+	exit
+	;;
 quit|exit)
-    boinccmd ${BOINCCMD_ARG} --quit
-    echo 'Exiting client'
-    refresh_notification
-    exit
-    ;;
+	boinccmd ${BOINCCMD_ARG} --quit
+	echo 'Exiting client'
+	refresh_notification
+	exit
+	;;
 esac
 fi
 
 if [ "$#" -eq 2 ]; then
 case "$1:$2" in
 power:default)
-    uncomment_var
-    sed -e "s|^MIN_BATT=.*|MIN_BATT=90|" -i "$(command -v $STARTUP)"
-    sed -e "s|^MAX_TEMP=.*|MAX_TEMP=40|" -i "$(command -v $STARTUP)"
-    sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "$(command -v $STARTUP)"
-    sed -e "s|^PWR_STA2=.*|#PWR_STA2='UNPLUGGED'|" -i "$(command -v $STARTUP)"
-    sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(command -v $STARTUP)"
-    restart_script
-    echo "Set to $@"
-    exit
-    ;;
+	uncomment_var
+	sed -e "s|^MIN_BATT=.*|MIN_BATT=90|" -i "$(command -v $STARTUP)"
+	sed -e "s|^MAX_TEMP=.*|MAX_TEMP=40|" -i "$(command -v $STARTUP)"
+	sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "$(command -v $STARTUP)"
+	sed -e "s|^PWR_STA2=.*|#PWR_STA2='UNPLUGGED'|" -i "$(command -v $STARTUP)"
+	sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(command -v $STARTUP)"
+	restart_script
+	echo "Set to $@"
+	exit
+	;;
 power:allinac)
-    uncomment_var
-    sed -e "s|^MIN_BATT=.*|MIN_BATT=0|" -i "$(command -v $STARTUP)"
-    sed -e "s|^MAX_TEMP=.*|MAX_TEMP=37|" -i "$(command -v $STARTUP)"
-    sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "$(command -v $STARTUP)"
-    sed -e "s|^PWR_STA2=.*|#PWR_STA2='UNPLUGGED'|" -i "$(command -v $STARTUP)"
-    sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(command -v $STARTUP)"
-    restart_script
-    echo "Set to $@"
-    exit
-    ;;
+	uncomment_var
+	sed -e "s|^MIN_BATT=.*|MIN_BATT=0|" -i "$(command -v $STARTUP)"
+	sed -e "s|^MAX_TEMP=.*|MAX_TEMP=37|" -i "$(command -v $STARTUP)"
+	sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "$(command -v $STARTUP)"
+	sed -e "s|^PWR_STA2=.*|#PWR_STA2='UNPLUGGED'|" -i "$(command -v $STARTUP)"
+	sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(command -v $STARTUP)"
+	restart_script
+	echo "Set to $@"
+	exit
+	;;
 power:optimumall)
-    uncomment_var
-    sed -e "s|^MIN_BATT=.*|MIN_BATT=50|" -i "$(command -v $STARTUP)"
-    sed -e "s|^MAX_TEMP=.*|MAX_TEMP=37|" -i "$(command -v $STARTUP)"
-    sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "$(command -v $STARTUP)"
-    sed -e "s|^PWR_STA2=.*|PWR_STA2='UNPLUGGED'|" -i "$(command -v $STARTUP)"
-    sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(command -v $STARTUP)"
-    restart_script
-    echo "Set to $@"
-    exit
-    ;;
+	uncomment_var
+	sed -e "s|^MIN_BATT=.*|MIN_BATT=50|" -i "$(command -v $STARTUP)"
+	sed -e "s|^MAX_TEMP=.*|MAX_TEMP=37|" -i "$(command -v $STARTUP)"
+	sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "$(command -v $STARTUP)"
+	sed -e "s|^PWR_STA2=.*|PWR_STA2='UNPLUGGED'|" -i "$(command -v $STARTUP)"
+	sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(command -v $STARTUP)"
+	restart_script
+	echo "Set to $@"
+	exit
+	;;
 power:usboff)
-    sed -e "s|^#PWR_STA3=.*|PWR_STA3=|" -i "$(command -v $STARTUP)"
-    sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(command -v $STARTUP)"
-    restart_script
-    echo "Set to pause computing when charging via USB"
-    exit
-    ;;
+	sed -e "s|^#PWR_STA3=.*|PWR_STA3=|" -i "$(command -v $STARTUP)"
+	sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(command -v $STARTUP)"
+	restart_script
+	echo "Set to pause computing when charging via USB"
+	exit
+	;;
 power:usbon)
-    sed -e "s|^#PWR_STA3=.*|PWR_STA3=|" -i "$(command -v $STARTUP)"
-    sed -e "s|^PWR_STA3=.*|PWR_STA3='PLUGGED_USB'|" -i "$(command -v $STARTUP)"
-    restart_script
-    echo "Set to resume computing when charging via USB"
-    exit
-    ;;
+	sed -e "s|^#PWR_STA3=.*|PWR_STA3=|" -i "$(command -v $STARTUP)"
+	sed -e "s|^PWR_STA3=.*|PWR_STA3='PLUGGED_USB'|" -i "$(command -v $STARTUP)"
+	restart_script
+	echo "Set to resume computing when charging via USB"
+	exit
+	;;
 sync:acctmgr)
-    boinccmd ${BOINCCMD_ARG} --acct_mgr sync
-    exit
-    ;;
+	boinccmd ${BOINCCMD_ARG} --acct_mgr sync
+	exit
+	;;
 esac
 fi
 
@@ -238,35 +240,35 @@ if [ "$#" -eq 3 ]; then
 if [ "$3" -ge 0 ] && [ "$3" -le 100 ]; then
 case "$1:$2" in
 set:cpu)
-    cpu="$(nproc --all)"
-    count=0
-    for i in $(ps -g $(pidof -s boinc) --no-headers -o pid); do
-        count="$(($count+1))"
-    done
-    count="$(($count-1))" # excluding the client
-    wants="$(($cpu*$3/100))"
-    if [ "$wants" -eq 0 ] && [ "$3" -eq 0 ]; then wants=100; fi
-    sed -e "s|<max_ncpus_pct>.*|<max_ncpus_pct>$3.000000</max_ncpus_pct>|" -i global_prefs_override.xml
-    boinccmd_read_prefs
-    echo "Set to use $3% of $cpu $2 cores"
-    exit
-    ;;
+	cpu="$(nproc --all)"
+	count=0
+	for i in $(ps -g $(pidof -s boinc) --no-headers -o pid); do
+		count="$(($count+1))"
+	done
+	count="$(($count-1))" # excluding the client
+	wants="$(($cpu*$3/100))"
+	if [ "$wants" -eq 0 ] && [ "$3" -eq 0 ]; then wants=100; fi
+	sed -e "s|<max_ncpus_pct>.*|<max_ncpus_pct>$3.000000</max_ncpus_pct>|" -i global_prefs_override.xml
+	boinccmd_read_prefs
+	echo "Set to use $3% of $cpu $2 cores"
+	exit
+	;;
 set:maxtemp)
-    sed -e "s|^MAX_TEMP=.*|MAX_TEMP=$3|" -i "$(command -v $STARTUP)"
-    restart_script
-    echo "Set to $3 C maximum temperature"
-    exit
-    ;;
+	sed -e "s|^MAX_TEMP=.*|MAX_TEMP=$3|" -i "$(command -v $STARTUP)"
+	restart_script
+	echo "Set to $3 C maximum temperature"
+	exit
+	;;
 set:minbatt)
-    sed -e "s|^MIN_BATT=.*|MIN_BATT=$3|" -i "$(command -v $STARTUP)"
-    restart_script
-    echo "Set to $3 % minimum battery level"
-    exit
-    ;;
+	sed -e "s|^MIN_BATT=.*|MIN_BATT=$3|" -i "$(command -v $STARTUP)"
+	restart_script
+	echo "Set to $3 % minimum battery level"
+	exit
+	;;
 esac
 else
-    echo "ERROR: Integer must be in the range between 0 and 100" >&2
-    exit 1
+	echo "ERROR: Integer must be in the range between 0 and 100" >&2
+	exit 1
 fi
 fi
 

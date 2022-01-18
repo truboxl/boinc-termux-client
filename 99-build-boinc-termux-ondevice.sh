@@ -1,21 +1,21 @@
-#!/data/data/com.termux/files/usr/bin/sh
+#!/bin/sh
 set -e
 
 export REPO="$PWD"
 
 if [ -z "${OUTPUT_FOLDER_BIN}" ]; then
-    export OUTPUT_FOLDER_BIN="${REPO}/build"
+	export OUTPUT_FOLDER_BIN="${REPO}/build"
 fi
 echo "OUTPUT_FOLDER_BIN=${OUTPUT_FOLDER_BIN}"
 
 echo "PREFIX=${PREFIX}"
 if [ ! -d "$PREFIX" ]; then
-    echo '$PREFIX is currently invalid. "make install" may fail'
+	echo '$PREFIX is currently invalid. "make install" may fail'
 fi
 
 echo "INSTALL=${INSTALL}"
 if [ "$INSTALL" != 1 ]; then
-    echo '$INSTALL is not set to 1. Not installing...'
+	echo '$INSTALL is not set to 1. Not installing...'
 fi
 echo
 
@@ -33,7 +33,7 @@ cd ./src/boinc*/
 export BOINC="$PWD"
 
 if [ -e ./Makefile ] && grep -q '^distclean:' ./Makefile; then
-    make distclean -s
+	make distclean -s
 fi
 
 # unfortunately BOINC ./configure is not intelligent in setting FLAGS for
@@ -58,13 +58,13 @@ export LDFLAGS="${LDFLAGS} -landroid-shmem"
 
 ./_autosetup
 ./configure -C \
-    --disable-server \
-    --disable-manager \
-    --host="$(uname -m)-linux-android" \
-    --prefix="$PREFIX" \
-    #--enable-bitness=64 \
-    #--with-boinc-platform=aarch64-android-linux-gnu \
-    #--with-boinc-alt-platform=
+	--disable-server \
+	--disable-manager \
+	--host="$(uname -m)-linux-android" \
+	--prefix="$PREFIX" \
+	#--enable-bitness=64 \
+	#--with-boinc-platform=aarch64-android-linux-gnu \
+	#--with-boinc-alt-platform=
 
 chrt -i 0 make -s -j$(($(nproc)/2))
 
@@ -83,11 +83,11 @@ du ./*
 # stop BOINC before updating
 if [ "$INSTALL" = 1 ]; then
 while true; do
-    echo "Checking whether BOINC is running... $(pidof boinc)"
-    if [ -z "$(pidof -s boinc)" ]; then break; fi
-    echo 'Killing BOINC...'
-    kill "$(pidof -s boinc)"
-    sleep 15
+	echo "Checking whether BOINC is running... $(pidof boinc)"
+	if [ -z "$(pidof -s boinc)" ]; then break; fi
+	echo 'Killing BOINC...'
+	kill "$(pidof -s boinc)"
+	sleep 15
 done
 fi
 
@@ -101,13 +101,13 @@ echo "===== BOINC build for Termux done ====="
 if [ "$INSTALL" = 1 ]; then
 # Place your script name that is executable below
 for i in "start-boinc"; do
-    if [ -n "$(command -v $i)" ]; then
-        while [ -n "$(pidof -s $i)" ]; do
-            kill "$(pidof -s $i)"
-            sleep 5
-        done
-        echo 'Starting BOINC'
-        "$i" &
-    fi
+	if [ -n "$(command -v $i)" ]; then
+		while [ -n "$(pidof -s $i)" ]; do
+			kill "$(pidof -s $i)"
+			sleep 5
+		done
+		echo 'Starting BOINC'
+		"$i" &
+	fi
 done
 fi
