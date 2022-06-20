@@ -62,7 +62,6 @@ export LDFLAGS="${LDFLAGS} -landroid-shmem"
 	--disable-manager \
 	--host="$(uname -m)-linux-android" \
 	--prefix="$PREFIX" \
-	#--enable-bitness=64 \
 	#--with-boinc-platform=aarch64-android-linux-gnu \
 	#--with-boinc-alt-platform=
 
