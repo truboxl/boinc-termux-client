@@ -53,7 +53,7 @@ commonFLAGS="${commonFLAGS} -fstack-protector-strong"
 # clang-11 fails "undeclared, standard C functions" test
 commonFLAGS="${commonFLAGS} -Werror=implicit-function-declaration"
 export CFLAGS="${CFLAGS} ${commonFLAGS}"
-export CXXFLAGS="${CXXFLAGS} ${commomFLAGS}"
+export CXXFLAGS="${CXXFLAGS} ${commonFLAGS}"
 export LDFLAGS="${LDFLAGS} -landroid-shmem"
 
 ./_autosetup
