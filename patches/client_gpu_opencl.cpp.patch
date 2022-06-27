@@ -1,0 +1,12 @@
+diff -uNr boinc/client/gpu_opencl.cpp boinc.mod/client/gpu_opencl.cpp
+--- boinc/client/gpu_opencl.cpp	2022-06-26 01:27:32.675890121 +0800
++++ boinc.mod/client/gpu_opencl.cpp	2022-06-28 06:21:39.203483607 +0800
+@@ -340,7 +340,7 @@
+         
+         ciErrNum = (*p_clGetDeviceIDs)(
+             platforms[platform_index],
+-            (CL_DEVICE_TYPE_GPU | CL_DEVICE_TYPE_ACCELERATOR),
++            (CL_DEVICE_TYPE_GPU), //| CL_DEVICE_TYPE_ACCELERATOR),
+             MAX_COPROC_INSTANCES, devices, &num_devices
+         );
+ 
