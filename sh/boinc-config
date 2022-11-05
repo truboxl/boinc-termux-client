@@ -2,28 +2,28 @@
 
 renice -n 0 -p "$$" >/dev/null
 
-APPDATA=${APPDATA:-$HOME/boincappdata}
+APPDATA=${APPDATA:-${HOME}/boincappdata}
 BOINC_HOST=${BOINC_HOST:-localhost}
 BOINC_PORT=${BOINC_PORT:-31416}
-BOINC_PASS="${BOINC_PASS:-$(cat $APPDATA/gui_rpc_auth.cfg)}"
-BOINC_PORT_ARG="--gui_rpc_port $BOINC_PORT"
-BOINCCMD_HOST_ARG="--host $BOINC_HOST:$BOINC_PORT"
-BOINCCMD_PASS_ARG="--passwd $BOINC_PASS"
+BOINC_PASS=${BOINC_PASS:-$(cat "${APPDATA}/gui_rpc_auth.cfg")}
+BOINC_PORT_ARG="--gui_rpc_port ${BOINC_PORT}"
+BOINCCMD_HOST_ARG="--host ${BOINC_HOST}:${BOINC_PORT}"
+BOINCCMD_PASS_ARG="--passwd ${BOINC_PASS}"
 BOINCCMD_ARG="${BOINCCMD_HOST_ARG} ${BOINCCMD_PASS_ARG}"
-BOINC_PATH=${BOINC_PATH:-$PREFIX/bin}
-PATH="$BOINC_PATH:$PATH"
-STARTUP=${STARTUP:-start-boinc}
+BOINC_PATH=${BOINC_PATH:-${PREFIX}/bin}
+PATH="${BOINC_PATH}:${PATH}"
+STARTUP=$(command -v "${STARTUP:-boinc-start}")
 
-SCRIPT="$(echo $0 | sed -E -e "s|$(dirname $0)+/||")"
+SCRIPT=$(echo "$0" | sed -E -e "s|$(dirname "$0")+/||")
 
 show_help() {
 	cat <<- EOF
-	$SCRIPT [options]
+	${SCRIPT} [options]
 	Configure BOINC client settings
 
-	Data directory [APPDATA]:     $APPDATA
-	Startup script [STARTUP]:     $(command -v $STARTUP)
-	GUI RPC Port   [BOINC_PORT]:  $BOINC_PORT
+	Data directory [APPDATA]:     ${APPDATA}
+	Startup script [STARTUP]:     ${STARTUP}
+	GUI RPC Port   [BOINC_PORT]:  ${BOINC_PORT}
 
 	Options:
 	help              Show this help
@@ -56,15 +56,15 @@ if [ "$#" -eq 0 ]; then
 	exit
 fi
 
-cd "$APPDATA"
+cd "${APPDATA}"
 
 boinccmd_read_prefs() {
 	boinccmd ${BOINCCMD_ARG} --read_global_prefs_override
 }
 
 restart_script() {
-	pkill -f "$STARTUP\$"
-	"$(command -v $STARTUP)" &
+	pkill -f "${STARTUP}"
+	"${STARTUP}" &
 }
 
 set_global_prefs() {
@@ -73,17 +73,17 @@ set_global_prefs() {
 }
 
 set_start_boinc() {
-	editor "$(command -v $STARTUP)"
+	editor "${STARTUP}"
 	restart_script
 }
 
 uncomment_var() {
-	sed -e "s|^#MIN_BATT=.*|MIN_BATT=|" -i "$(command -v $STARTUP)"
-	sed -e "s|^#MAX_TEMP=.*|MAX_TEMP=|" -i "$(command -v $STARTUP)"
-	sed -e "s|^#PWR_STA1=.*|PWR_STA1=|" -i "$(command -v $STARTUP)"
-	sed -e "s|^#PWR_STA2=.*|PWR_STA2=|" -i "$(command -v $STARTUP)"
-	sed -e "s|^#PWR_STA3=.*|PWR_STA3=|" -i "$(command -v $STARTUP)"
-	sed -e "s|^#MIN_TEMP=.*|MIN_TEMP=|" -i "$(command -v $STARTUP)"
+	sed -e "s|^#MIN_BATT=.*|MIN_BATT=|" -i "${STARTUP}"
+	sed -e "s|^#MAX_TEMP=.*|MAX_TEMP=|" -i "${STARTUP}"
+	sed -e "s|^#PWR_STA1=.*|PWR_STA1=|" -i "${STARTUP}"
+	sed -e "s|^#PWR_STA2=.*|PWR_STA2=|" -i "${STARTUP}"
+	sed -e "s|^#PWR_STA3=.*|PWR_STA3=|" -i "${STARTUP}"
+	sed -e "s|^#MIN_TEMP=.*|MIN_TEMP=|" -i "${STARTUP}"
 }
 
 # termux-notification
@@ -97,36 +97,36 @@ boinc_stopped_notify() {
 		--id boinc \
 		--title "BOINC (Stopped)" \
 		--button1 Start \
-		--button1-action "$(dirname $0)/$STARTUP"
-}
+		--button1-action "$(dirname "$0")/${STARTUP}"
+	}
 
-boinc_running_notify() {
-	echo "$boinc_status" | \
-		sed -e "s|.*Tasks.*|Tasks: (Swipe to refresh)\t|" \
+	boinc_running_notify() {
+		echo "${boinc_status}" | \
+			sed -e "s|.*Tasks.*|Tasks: (Swipe to refresh)\t|" \
 			-e "s|name: \(.*\)|\1 |g" \
 			-e "s|active_task_state: \(.*\)|\1 |g" \
 			-e "s|fraction done: \(.*\)|\1\t|g" | \
-		tr -d "\n" | \
-		tr "\t" "\n" | \
-		termux-notification \
-		--alert-once \
-		--group boinc \
-		--id boinc \
-		--title "BOINC (Running)" \
-		--on-delete "$0 refresh-notify" \
-		--button1 Resume \
-		--button1-action "$0 resume" \
-		--button2 Pause \
-		--button2-action "$0 pause" \
-		--button3 Quit \
-		--button3-action "$0 quit"
-}
+			tr -d "\n" | \
+			tr "\t" "\n" | \
+			termux-notification \
+			--alert-once \
+			--group boinc \
+			--id boinc \
+			--title "BOINC (Running)" \
+			--on-delete "$0 refresh-notify" \
+			--button1 Resume \
+			--button1-action "$0 resume" \
+			--button2 Pause \
+			--button2-action "$0 pause" \
+			--button3 Quit \
+			--button3-action "$0 quit"
+		}
 
-refresh_notification() {
-	boinc_status="$(boinccmd ${BOINCCMD_ARG} --get_tasks 2>&1 | \
+		refresh_notification() {
+			boinc_status=$(boinccmd ${BOINCCMD_ARG} --get_tasks 2>&1 | \
 					grep -E 'Tasks|   name|active_task_state|fraction done' | \
-					sed -e 's|   ||g')"
-	case "$boinc_status" in
+					sed -e 's|   ||g')
+	case "${boinc_status}" in
 		'') boinc_stopped_notify ;;
 		*)  boinc_running_notify ;;
 	esac
@@ -149,7 +149,7 @@ edit)
 	exit
 	;;
 pause|suspend)
-	pkill -f "$STARTUP\$"
+	pkill -f "${STARTUP}"
 	boinccmd ${BOINCCMD_ARG} --set_run_mode never
 	echo 'Pausing computation'
 	refresh_notification
@@ -184,47 +184,47 @@ if [ "$#" -eq 2 ]; then
 case "$1:$2" in
 power:default)
 	uncomment_var
-	sed -e "s|^MIN_BATT=.*|MIN_BATT=90|" -i "$(command -v $STARTUP)"
-	sed -e "s|^MAX_TEMP=.*|MAX_TEMP=40|" -i "$(command -v $STARTUP)"
-	sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "$(command -v $STARTUP)"
-	sed -e "s|^PWR_STA2=.*|#PWR_STA2='UNPLUGGED'|" -i "$(command -v $STARTUP)"
-	sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(command -v $STARTUP)"
+	sed -e "s|^MIN_BATT=.*|MIN_BATT=90|" -i "${STARTUP}"
+	sed -e "s|^MAX_TEMP=.*|MAX_TEMP=40|" -i "${STARTUP}"
+	sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "${STARTUP}"
+	sed -e "s|^PWR_STA2=.*|#PWR_STA2='UNPLUGGED'|" -i "${STARTUP}"
+	sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "${STARTUP}"
 	restart_script
-	echo "Set to $@"
+	echo "Set to $*"
 	exit
 	;;
 power:allinac)
 	uncomment_var
-	sed -e "s|^MIN_BATT=.*|MIN_BATT=0|" -i "$(command -v $STARTUP)"
-	sed -e "s|^MAX_TEMP=.*|MAX_TEMP=37|" -i "$(command -v $STARTUP)"
-	sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "$(command -v $STARTUP)"
-	sed -e "s|^PWR_STA2=.*|#PWR_STA2='UNPLUGGED'|" -i "$(command -v $STARTUP)"
-	sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(command -v $STARTUP)"
+	sed -e "s|^MIN_BATT=.*|MIN_BATT=0|" -i "${STARTUP}"
+	sed -e "s|^MAX_TEMP=.*|MAX_TEMP=37|" -i "${STARTUP}"
+	sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "${STARTUP}"
+	sed -e "s|^PWR_STA2=.*|#PWR_STA2='UNPLUGGED'|" -i "${STARTUP}"
+	sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "${STARTUP}"
 	restart_script
-	echo "Set to $@"
+	echo "Set to $*"
 	exit
 	;;
 power:optimumall)
 	uncomment_var
-	sed -e "s|^MIN_BATT=.*|MIN_BATT=50|" -i "$(command -v $STARTUP)"
-	sed -e "s|^MAX_TEMP=.*|MAX_TEMP=37|" -i "$(command -v $STARTUP)"
-	sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "$(command -v $STARTUP)"
-	sed -e "s|^PWR_STA2=.*|PWR_STA2='UNPLUGGED'|" -i "$(command -v $STARTUP)"
-	sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(command -v $STARTUP)"
+	sed -e "s|^MIN_BATT=.*|MIN_BATT=50|" -i "${STARTUP}"
+	sed -e "s|^MAX_TEMP=.*|MAX_TEMP=37|" -i "${STARTUP}"
+	sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "${STARTUP}"
+	sed -e "s|^PWR_STA2=.*|PWR_STA2='UNPLUGGED'|" -i "${STARTUP}"
+	sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "${STARTUP}"
 	restart_script
-	echo "Set to $@"
+	echo "Set to $*"
 	exit
 	;;
 power:usboff)
-	sed -e "s|^#PWR_STA3=.*|PWR_STA3=|" -i "$(command -v $STARTUP)"
-	sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "$(command -v $STARTUP)"
+	sed -e "s|^#PWR_STA3=.*|PWR_STA3=|" -i "${STARTUP}"
+	sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "${STARTUP}"
 	restart_script
 	echo "Set to pause computing when charging via USB"
 	exit
 	;;
 power:usbon)
-	sed -e "s|^#PWR_STA3=.*|PWR_STA3=|" -i "$(command -v $STARTUP)"
-	sed -e "s|^PWR_STA3=.*|PWR_STA3='PLUGGED_USB'|" -i "$(command -v $STARTUP)"
+	sed -e "s|^#PWR_STA3=.*|PWR_STA3=|" -i "${STARTUP}"
+	sed -e "s|^PWR_STA3=.*|PWR_STA3='PLUGGED_USB'|" -i "${STARTUP}"
 	restart_script
 	echo "Set to resume computing when charging via USB"
 	exit
@@ -240,27 +240,27 @@ if [ "$#" -eq 3 ]; then
 if [ "$3" -ge 0 ] && [ "$3" -le 100 ]; then
 case "$1:$2" in
 set:cpu)
-	cpu="$(nproc --all)"
+	cpu=$(nproc --all)
 	count=0
-	for i in $(ps -g $(pidof -s boinc) --no-headers -o pid); do
-		count="$(($count+1))"
+	for i in $(ps -g "$(pidof -s boinc)" --no-headers -o pid); do
+		count=$((count+1))
 	done
-	count="$(($count-1))" # excluding the client
-	wants="$(($cpu*$3/100))"
+	count=$((count-1)) # excluding the client
+	wants=$((cpu*$3/100))
 	if [ "$wants" -eq 0 ] && [ "$3" -eq 0 ]; then wants=100; fi
 	sed -e "s|<max_ncpus_pct>.*|<max_ncpus_pct>$3.000000</max_ncpus_pct>|" -i global_prefs_override.xml
 	boinccmd_read_prefs
-	echo "Set to use $3% of $cpu $2 cores"
+	echo "Set to use $3% of ${cpu} $2 cores"
 	exit
 	;;
 set:maxtemp)
-	sed -e "s|^MAX_TEMP=.*|MAX_TEMP=$3|" -i "$(command -v $STARTUP)"
+	sed -e "s|^MAX_TEMP=.*|MAX_TEMP=$3|" -i "${STARTUP}"
 	restart_script
 	echo "Set to $3 C maximum temperature"
 	exit
 	;;
 set:minbatt)
-	sed -e "s|^MIN_BATT=.*|MIN_BATT=$3|" -i "$(command -v $STARTUP)"
+	sed -e "s|^MIN_BATT=.*|MIN_BATT=$3|" -i "${STARTUP}"
 	restart_script
 	echo "Set to $3 % minimum battery level"
 	exit
@@ -272,5 +272,5 @@ else
 fi
 fi
 
-echo "ERROR: Unknown option: $@" >&2
+echo "ERROR: Unknown option: $*" >&2
 exit 1

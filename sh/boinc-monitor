@@ -2,17 +2,17 @@
 
 renice -n 0 -p "$$" >/dev/null
 
-APPDATA=${APPDATA:-$HOME/boincappdata}
+APPDATA=${APPDATA:-${HOME}/boincappdata}
 BOINC_HOST=${BOINC_HOST:-localhost}
 BOINC_PORT=${BOINC_PORT:-31416}
-BOINC_PASS="${BOINC_PASS:-$(cat $APPDATA/gui_rpc_auth.cfg)}"
-BOINC_PORT_ARG="--gui_rpc_port $BOINC_PORT"
-BOINCCMD_HOST_ARG="--host $BOINC_HOST:$BOINC_PORT"
-BOINCCMD_PASS_ARG="--passwd $BOINC_PASS"
+BOINC_PASS=${BOINC_PASS:-$(cat "${APPDATA}/gui_rpc_auth.cfg")}
+BOINC_PORT_ARG="--gui_rpc_port ${BOINC_PORT}"
+BOINCCMD_HOST_ARG="--host ${BOINC_HOST}:${BOINC_PORT}"
+BOINCCMD_PASS_ARG="--passwd ${BOINC_PASS}"
 BOINCCMD_ARG="${BOINCCMD_HOST_ARG} ${BOINCCMD_PASS_ARG}"
 BOINC_PATH=${BOINC_PATH:-$PREFIX/bin}
-PATH="$BOINC_PATH:$PATH"
-STARTUP=${STARTUP:-start-boinc}
+PATH="${BOINC_PATH}:${PATH}"
+STARTUP=$(command -v "${STARTUP:-boinc-start}")
 
 case "$1" in
 edit)
@@ -24,16 +24,16 @@ esac
 
 cd "$APPDATA"
 
-pkill -x main
-pkill -x termux-api
+pkill -x main 2>/dev/null
+pkill -x termux-api 2>/dev/null
 echo "Current temp: $(timeout 5 termux-battery-status 2>/dev/null | jq .temperature)"
-echo "Maximum temp: $(grep '^MAX_TEMP=' $(command -v $STARTUP) | sed -e 's/MAX_TEMP=//')"
+echo "Maximum temp: $(grep '^MAX_TEMP=' "${STARTUP}" | sed -e 's/MAX_TEMP=//')"
 echo
 
 if [ -n "$(pidof boinc)" ]; then
-	for BOINC_PID in "$(pidof boinc)"; do
-		echo "BOINC PID: $BOINC_PID"
-		ps -o pid,cmd --no-headers -g "$BOINC_PID" -H
+	for BOINC_PID in $(pidof boinc); do
+		echo "BOINC PID: ${BOINC_PID}"
+		ps -o pid,cmd --no-headers -g "${BOINC_PID}" -H
 	done
 else
 	echo 'BOINC client is not running'
