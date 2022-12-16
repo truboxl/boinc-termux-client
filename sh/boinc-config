@@ -63,7 +63,7 @@ boinccmd_read_prefs() {
 }
 
 restart_script() {
-	pkill -f "${STARTUP}"
+	pkill -x "$(basename ${STARTUP})"
 	"${STARTUP}" &
 }
 
@@ -78,12 +78,13 @@ set_start_boinc() {
 }
 
 uncomment_var() {
-	sed -e "s|^#MIN_BATT=.*|MIN_BATT=|" -i "${STARTUP}"
-	sed -e "s|^#MAX_TEMP=.*|MAX_TEMP=|" -i "${STARTUP}"
-	sed -e "s|^#PWR_STA1=.*|PWR_STA1=|" -i "${STARTUP}"
-	sed -e "s|^#PWR_STA2=.*|PWR_STA2=|" -i "${STARTUP}"
-	sed -e "s|^#PWR_STA3=.*|PWR_STA3=|" -i "${STARTUP}"
-	sed -e "s|^#MIN_TEMP=.*|MIN_TEMP=|" -i "${STARTUP}"
+	sed -i "${STARTUP}" \
+		-e "s|^#MIN_BATT=.*|MIN_BATT=|" \
+		-e "s|^#MAX_TEMP=.*|MAX_TEMP=|" \
+		-e "s|^#PWR_STA1=.*|PWR_STA1=|" \
+		-e "s|^#PWR_STA2=.*|PWR_STA2=|" \
+		-e "s|^#PWR_STA3=.*|PWR_STA3=|" \
+		-e "s|^#MIN_TEMP=.*|MIN_TEMP=|"
 }
 
 # termux-notification
@@ -97,7 +98,7 @@ boinc_stopped_notify() {
 		--id boinc \
 		--title "BOINC (Stopped)" \
 		--button1 Start \
-		--button1-action "$(dirname "$0")/${STARTUP}"
+		--button1-action "${STARTUP}"
 	}
 
 	boinc_running_notify() {
@@ -106,8 +107,7 @@ boinc_stopped_notify() {
 			-e "s|name: \(.*\)|\1 |g" \
 			-e "s|active_task_state: \(.*\)|\1 |g" \
 			-e "s|fraction done: \(.*\)|\1\t|g" | \
-			tr -d "\n" | \
-			tr "\t" "\n" | \
+			tr -d "\n" | tr "\t" "\n" | \
 			termux-notification \
 			--alert-once \
 			--group boinc \
@@ -123,9 +123,9 @@ boinc_stopped_notify() {
 		}
 
 		refresh_notification() {
-			boinc_status=$(boinccmd ${BOINCCMD_ARG} --get_tasks 2>&1 | \
-					grep -E 'Tasks|   name|active_task_state|fraction done' | \
-					sed -e 's|   ||g')
+			boinc_status=$(boinccmd ${BOINCCMD_ARG} --get_tasks 2>&1 \
+					| grep -E 'Tasks|   name|active_task_state|fraction done' \
+					| sed -e 's|   ||g')
 	case "${boinc_status}" in
 		'') boinc_stopped_notify ;;
 		*)  boinc_running_notify ;;
@@ -149,7 +149,7 @@ edit)
 	exit
 	;;
 pause|suspend)
-	pkill -f "${STARTUP}"
+	pkill -x "$(basename ${STARTUP})"
 	boinccmd ${BOINCCMD_ARG} --set_run_mode never
 	echo 'Pausing computation'
 	refresh_notification
@@ -184,47 +184,52 @@ if [ "$#" -eq 2 ]; then
 case "$1:$2" in
 power:default)
 	uncomment_var
-	sed -e "s|^MIN_BATT=.*|MIN_BATT=90|" -i "${STARTUP}"
-	sed -e "s|^MAX_TEMP=.*|MAX_TEMP=40|" -i "${STARTUP}"
-	sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "${STARTUP}"
-	sed -e "s|^PWR_STA2=.*|#PWR_STA2='UNPLUGGED'|" -i "${STARTUP}"
-	sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "${STARTUP}"
+	sed -i "${STARTUP}" \
+		-e "s|^MIN_BATT=.*|MIN_BATT=90|" \
+		-e "s|^MAX_TEMP=.*|MAX_TEMP=40|" \
+		-e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" \
+		-e "s|^PWR_STA2=.*|#PWR_STA2='UNPLUGGED'|" \
+		-e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|"
 	restart_script
 	echo "Set to $*"
 	exit
 	;;
 power:allinac)
 	uncomment_var
-	sed -e "s|^MIN_BATT=.*|MIN_BATT=0|" -i "${STARTUP}"
-	sed -e "s|^MAX_TEMP=.*|MAX_TEMP=37|" -i "${STARTUP}"
-	sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "${STARTUP}"
-	sed -e "s|^PWR_STA2=.*|#PWR_STA2='UNPLUGGED'|" -i "${STARTUP}"
-	sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "${STARTUP}"
+	sed -i "${STARTUP}" \
+		-e "s|^MIN_BATT=.*|MIN_BATT=0|" \
+		-e "s|^MAX_TEMP=.*|MAX_TEMP=37|" \
+		-e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" \
+		-e "s|^PWR_STA2=.*|#PWR_STA2='UNPLUGGED'|" \
+		-e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|"
 	restart_script
 	echo "Set to $*"
 	exit
 	;;
 power:optimumall)
 	uncomment_var
-	sed -e "s|^MIN_BATT=.*|MIN_BATT=50|" -i "${STARTUP}"
-	sed -e "s|^MAX_TEMP=.*|MAX_TEMP=37|" -i "${STARTUP}"
-	sed -e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" -i "${STARTUP}"
-	sed -e "s|^PWR_STA2=.*|PWR_STA2='UNPLUGGED'|" -i "${STARTUP}"
-	sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "${STARTUP}"
+	sed -i "${STARTUP}" \
+		-e "s|^MIN_BATT=.*|MIN_BATT=50|" \
+		-e "s|^MAX_TEMP=.*|MAX_TEMP=37|" \
+		-e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" \
+		-e "s|^PWR_STA2=.*|PWR_STA2='UNPLUGGED'|" \
+		-e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|"
 	restart_script
 	echo "Set to $*"
 	exit
 	;;
 power:usboff)
-	sed -e "s|^#PWR_STA3=.*|PWR_STA3=|" -i "${STARTUP}"
-	sed -e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|" -i "${STARTUP}"
+	sed -i "${STARTUP}" \
+		-e "s|^#PWR_STA3=.*|PWR_STA3=|" \
+		-e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|"
 	restart_script
 	echo "Set to pause computing when charging via USB"
 	exit
 	;;
 power:usbon)
-	sed -e "s|^#PWR_STA3=.*|PWR_STA3=|" -i "${STARTUP}"
-	sed -e "s|^PWR_STA3=.*|PWR_STA3='PLUGGED_USB'|" -i "${STARTUP}"
+	sed -i "${STARTUP}" \
+		-e "s|^#PWR_STA3=.*|PWR_STA3=|" \
+		-e "s|^PWR_STA3=.*|PWR_STA3='PLUGGED_USB'|"
 	restart_script
 	echo "Set to resume computing when charging via USB"
 	exit
@@ -248,19 +253,22 @@ set:cpu)
 	count=$((count-1)) # excluding the client
 	wants=$((cpu*$3/100))
 	if [ "$wants" -eq 0 ] && [ "$3" -eq 0 ]; then wants=100; fi
-	sed -e "s|<max_ncpus_pct>.*|<max_ncpus_pct>$3.000000</max_ncpus_pct>|" -i global_prefs_override.xml
+	sed -i global_prefs_override.xml \
+		-e "s|<max_ncpus_pct>.*|<max_ncpus_pct>$3.000000</max_ncpus_pct>|"
 	boinccmd_read_prefs
 	echo "Set to use $3% of ${cpu} $2 cores"
 	exit
 	;;
 set:maxtemp)
-	sed -e "s|^MAX_TEMP=.*|MAX_TEMP=$3|" -i "${STARTUP}"
+	sed -i "${STARTUP}" \
+		-e "s|^MAX_TEMP=.*|MAX_TEMP=$3|"
 	restart_script
 	echo "Set to $3 C maximum temperature"
 	exit
 	;;
 set:minbatt)
-	sed -e "s|^MIN_BATT=.*|MIN_BATT=$3|" -i "${STARTUP}"
+	sed -i "${STARTUP}" \
+		-e "s|^MIN_BATT=.*|MIN_BATT=$3|"
 	restart_script
 	echo "Set to $3 % minimum battery level"
 	exit

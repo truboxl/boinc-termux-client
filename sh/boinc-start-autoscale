@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/sh
+#!/bin/sh
 termux-wake-lock
 
 renice -n 0 -p "$$" >/dev/null

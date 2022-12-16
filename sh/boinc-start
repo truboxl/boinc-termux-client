@@ -3,6 +3,7 @@ termux-wake-lock
 
 renice -n 0 -p "$$" >/dev/null
 
+if false; then
 if [ "${USE_ALL_CORES}" != 1 ]; then
 	little_cores=0
 	unset prev
@@ -13,6 +14,7 @@ if [ "${USE_ALL_CORES}" != 1 ]; then
 		prev=${core}
 	done
 	taskset -apc 0-$((little_cores-1)) "$$" >/dev/null
+fi
 fi
 
 # ===== user variables =====
@@ -65,7 +67,7 @@ update_battery_status() {
 	pkill -x main
 	pkill -x termux-api
 	OLDSTAT="${STAT}"
-	STAT=$(timeout 5 termux-battery-status 2>&1)
+	STAT=$(timeout 10 termux-battery-status 2>&1)
 	case "${STAT}" in
 		'')         STAT="${OLDSTAT}" ;;
 		Terminated) STAT="${OLDSTAT}" ;;
