@@ -40,8 +40,8 @@ BOINC_PASS=$(cat "${APPDATA}/gui_rpc_auth.cfg")
 # BOINC Android app defaults
 # BATT >= 90; TEMP <= 40; AC power
 # comment/uncomment to disable/enable running at different power status
-MIN_BATT=0
-MAX_TEMP=37
+MIN_BATT=90
+MAX_TEMP=40
 PWR_STA1='PLUGGED_AC'
 #PWR_STA2='UNPLUGGED'
 #PWR_STA3='PLUGGED_USB'
