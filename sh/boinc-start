@@ -3,7 +3,7 @@ termux-wake-lock
 
 renice -n 0 -p "$$" >/dev/null
 
-if false; then
+if :; then
 if [ "${USE_ALL_CORES}" != 1 ]; then
 	little_cores=0
 	unset prev
@@ -19,7 +19,7 @@ fi
 
 # ===== user variables =====
 # working directory
-APPDATA="${HOME}/boincappdata"
+APPDATA="${APPDATA:-${HOME}/boincappdata}"
 
 # if you have compiled BOINC yourself
 BOINC_PATH="${PREFIX}/bin"
@@ -67,7 +67,7 @@ update_battery_status() {
 	pkill -x main
 	pkill -x termux-api
 	OLDSTAT="${STAT}"
-	STAT=$(timeout 10 termux-battery-status 2>&1)
+	STAT=$(termux-battery-status 2>&1)
 	case "${STAT}" in
 		'')         STAT="${OLDSTAT}" ;;
 		Terminated) STAT="${OLDSTAT}" ;;

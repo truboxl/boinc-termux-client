@@ -44,8 +44,8 @@ show_help() {
 
 	Profiles:     MINBATT MAXTEMP AC  BATT    USB
 	default       40      90      Y   N       N
-	allinac       0       37      Y   N       N
-	optimumall    50      37      Y   Y       N
+	allinac       0       40      Y   N       N
+	optimumall    50      40      Y   Y       N
 	usboff        -       -       -   -       N
 	usbon         -       -       -   -       Y
 	EOF
@@ -199,7 +199,7 @@ power:allinac)
 	uncomment_var
 	sed -i "${STARTUP}" \
 		-e "s|^MIN_BATT=.*|MIN_BATT=0|" \
-		-e "s|^MAX_TEMP=.*|MAX_TEMP=37|" \
+		-e "s|^MAX_TEMP=.*|MAX_TEMP=40|" \
 		-e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" \
 		-e "s|^PWR_STA2=.*|#PWR_STA2='UNPLUGGED'|" \
 		-e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|"
@@ -211,7 +211,7 @@ power:optimumall)
 	uncomment_var
 	sed -i "${STARTUP}" \
 		-e "s|^MIN_BATT=.*|MIN_BATT=50|" \
-		-e "s|^MAX_TEMP=.*|MAX_TEMP=37|" \
+		-e "s|^MAX_TEMP=.*|MAX_TEMP=40|" \
 		-e "s|^PWR_STA1=.*|PWR_STA1='PLUGGED_AC'|" \
 		-e "s|^PWR_STA2=.*|PWR_STA2='UNPLUGGED'|" \
 		-e "s|^PWR_STA3=.*|#PWR_STA3='PLUGGED_USB'|"
